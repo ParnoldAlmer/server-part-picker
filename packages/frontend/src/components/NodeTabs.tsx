@@ -1,21 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { useBuildStore } from '../store/buildStore';
 import { PartBrowser } from './PartBrowser';
 import type { Motherboard } from '../types/hardware';
+import motherboardData from '../../../backend/src/data/motherboards.json';
 
 export function NodeTabs() {
     const { build, setNodeMotherboard } = useBuildStore();
     const [selectedNodeIndex, setSelectedNodeIndex] = useState(0);
-    const [motherboards, setMotherboards] = useState<Motherboard[]>([]);
+    const [motherboards] = useState<Motherboard[]>(motherboardData as Motherboard[]);
     const [showMoboSelector, setShowMoboSelector] = useState(false);
-
-    useEffect(() => {
-        fetch('http://localhost:3001/api/catalog/motherboards')
-            .then(res => res.json())
-            .then(data => setMotherboards(data))
-            .catch(console.error);
-    }, []);
 
     if (!build.chassis) return null;
 

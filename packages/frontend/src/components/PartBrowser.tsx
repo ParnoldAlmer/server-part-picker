@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { CPU, Memory, Storage, Platform } from '../types/hardware';
 import { useBuildStore } from '../store/buildStore';
 import { cn } from '../lib/utils';
+import cpuData from '../../../backend/src/data/cpus.json';
+import memoryData from '../../../backend/src/data/memory.json';
+import storageData from '../../../backend/src/data/storage.json';
 
 type ComponentType = 'cpus' | 'memory' | 'storage';
 
@@ -12,59 +15,20 @@ interface PartBrowserProps {
 export function PartBrowser({ nodeIndex }: PartBrowserProps) {
     const [selectedType, setSelectedType] = useState<ComponentType>('cpus');
     const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
-    const [cpus, setCpus] = useState<CPU[]>([]);
-    const [memory, setMemory] = useState<Memory[]>([]);
-    const [storage, setStorage] = useState<Storage[]>([]);
-    const [loading, setLoading] = useState(false);
 
     const { build, addNodeCPU, addNodeMemory, addNodeStorage, removeNodeCPU } = useBuildStore();
     const node = build.nodes[nodeIndex];
 
-    // Load CPUs
-    useEffect(() => {
-        if (selectedType === 'cpus') {
-            setLoading(true);
-            const url = platformFilter === 'all'
-                ? 'http://localhost:3001/api/catalog/cpus'
-                : `http://localhost:3001/api/catalog/cpus?platform=${platformFilter}`;
+    // Filter CPUs by platform
+    const cpus = useMemo(() => {
+        const allCpus = cpuData as CPU[];
+        if (platformFilter === 'all') return allCpus;
+        return allCpus.filter(cpu => cpu.platform === platformFilter);
+    }, [platformFilter]);
 
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    setCpus(data);
-                    setLoading(false);
-                })
-                .catch(() => setLoading(false));
-        }
-    }, [selectedType, platformFilter]);
-
-    // Load Memory
-    useEffect(() => {
-        if (selectedType === 'memory') {
-            setLoading(true);
-            fetch('http://localhost:3001/api/catalog/memory')
-                .then(res => res.json())
-                .then(data => {
-                    setMemory(data);
-                    setLoading(false);
-                })
-                .catch(() => setLoading(false));
-        }
-    }, [selectedType]);
-
-    // Load Storage
-    useEffect(() => {
-        if (selectedType === 'storage') {
-            setLoading(true);
-            fetch('http://localhost:3001/api/catalog/storage')
-                .then(res => res.json())
-                .then(data => {
-                    setStorage(data);
-                    setLoading(false);
-                })
-                .catch(() => setLoading(false));
-        }
-    }, [selectedType]);
+    const memory = memoryData as Memory[];
+    const storage = storageData as Storage[];
+    const loading = false;
 
     const handleAddCPU = (cpu: CPU) => {
         addNodeCPU(nodeIndex, cpu);

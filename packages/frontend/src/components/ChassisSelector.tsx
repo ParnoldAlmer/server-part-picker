@@ -1,25 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Chassis } from '../types/hardware';
 import { cn } from '../lib/utils';
 import { useBuildStore } from '../store/buildStore';
+import chassisData from '../../../backend/src/data/chassis.json';
 
 export function ChassisSelector() {
-    const [chassis, setChassis] = useState<Chassis[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [chassis] = useState<Chassis[]>(chassisData as Chassis[]);
+    const [loading] = useState(false);
     const { build, setChassis: setSelectedChassis } = useBuildStore();
-
-    useEffect(() => {
-        fetch('http://localhost:3001/api/catalog/chassis')
-            .then((res) => res.json())
-            .then((data) => {
-                setChassis(data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error('Failed to load chassis:', err);
-                setLoading(false);
-            });
-    }, []);
 
     if (loading) {
         return (
