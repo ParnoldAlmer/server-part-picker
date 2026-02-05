@@ -1,0 +1,279 @@
+[
+    {
+        "id": "chassis-supermicro-221bt-hnr",
+        "sku": "SYS-221BT-HNR",
+        "vendor": "Supermicro",
+        "name": "2U 4-Node Twin Server",
+        "formFactor": "2U",
+        "constraints": {
+            "nodes": [
+                {
+                    "index": 0,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                },
+                {
+                    "index": 1,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                },
+                {
+                    "index": 2,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                },
+                {
+                    "index": 3,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                }
+            ],
+            "bays": [
+                {
+                    "type": "SFF",
+                    "count": 24,
+                    "interface": "NVMe",
+                    "perNode": 6,
+                    "hotSwap": true
+                }
+            ],
+            "psu": {
+                "maxWatts": 2400,
+                "count": 2,
+                "redundancy": true
+            }
+        },
+        "msrp": 8500,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "chassis-supermicro-2125hs-tnr",
+        "sku": "AS-2125HS-TNR",
+        "vendor": "Supermicro",
+        "name": "2U Twin Dual AMD EPYC",
+        "formFactor": "2U",
+        "constraints": {
+            "nodes": [
+                {
+                    "index": 0,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                },
+                {
+                    "index": 1,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                }
+            ],
+            "bays": [
+                {
+                    "type": "U.2",
+                    "count": 12,
+                    "interface": "NVMe",
+                    "perNode": 6,
+                    "hotSwap": true
+                }
+            ],
+            "psu": {
+                "maxWatts": 2000,
+                "count": 2,
+                "redundancy": true
+            }
+        },
+        "msrp": 6200,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "chassis-dell-r760",
+        "sku": "R760",
+        "vendor": "Dell",
+        "name": "PowerEdge R760 2U",
+        "formFactor": "2U",
+        "constraints": {
+            "nodes": [
+                {
+                    "index": 0,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                }
+            ],
+            "bays": [
+                {
+                    "type": "SFF",
+                    "count": 16,
+                    "interface": "SAS",
+                    "hotSwap": true
+                },
+                {
+                    "type": "U.2",
+                    "count": 8,
+                    "interface": "NVMe",
+                    "hotSwap": true
+                }
+            ],
+            "psu": {
+                "maxWatts": 2400,
+                "count": 2,
+                "redundancy": true
+            },
+            "risers": [
+                {
+                    "slotIndex": 1,
+                    "lanes": 16,
+                    "gen": 5
+                },
+                {
+                    "slotIndex": 2,
+                    "lanes": 16,
+                    "gen": 5
+                },
+                {
+                    "slotIndex": 3,
+                    "lanes": 8,
+                    "gen": 4
+                }
+            ]
+        },
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "chassis-ampere-mt-jade",
+        "sku": "Mt. Jade",
+        "vendor": "Ampere",
+        "name": "Mt. Jade 2U Reference Design",
+        "formFactor": "2U",
+        "constraints": {
+            "nodes": [
+                {
+                    "index": 0,
+                    "moboFormFactors": [
+                        "EATX",
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                }
+            ],
+            "bays": [
+                {
+                    "type": "SFF",
+                    "count": 24,
+                    "interface": "SAS",
+                    "hotSwap": true
+                }
+            ],
+            "psu": {
+                "maxWatts": 1600,
+                "count": 2,
+                "redundancy": true
+            }
+        },
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "chassis-lenovo-sr675-v3",
+        "sku": "SR675 V3",
+        "vendor": "Lenovo",
+        "name": "ThinkSystem SR675 V3",
+        "formFactor": "2U",
+        "constraints": {
+            "nodes": [
+                {
+                    "index": 0,
+                    "moboFormFactors": [
+                        "Proprietary"
+                    ],
+                    "cpuCount": 2
+                }
+            ],
+            "bays": [
+                {
+                    "type": "SFF",
+                    "count": 8,
+                    "interface": "SAS",
+                    "hotSwap": true
+                }
+            ],
+            "psu": {
+                "maxWatts": 2000,
+                "count": 2,
+                "redundancy": true
+            }
+        },
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "chassis-supermicro-420gp-tnr",
+        "sku": "SYS-420GP-TNR",
+        "vendor": "Supermicro",
+        "name": "4U GPU Server",
+        "formFactor": "4U",
+        "constraints": {
+            "nodes": [
+                {
+                    "index": 0,
+                    "moboFormFactors": [
+                        "EATX"
+                    ],
+                    "cpuCount": 2
+                }
+            ],
+            "bays": [
+                {
+                    "type": "LFF",
+                    "count": 12,
+                    "interface": "SATA",
+                    "hotSwap": true
+                }
+            ],
+            "psu": {
+                "maxWatts": 3000,
+                "count": 2,
+                "redundancy": true
+            },
+            "risers": [
+                {
+                    "slotIndex": 1,
+                    "lanes": 16,
+                    "gen": 5
+                },
+                {
+                    "slotIndex": 2,
+                    "lanes": 16,
+                    "gen": 5
+                },
+                {
+                    "slotIndex": 3,
+                    "lanes": 16,
+                    "gen": 5
+                },
+                {
+                    "slotIndex": 4,
+                    "lanes": 16,
+                    "gen": 5
+                }
+            ]
+        },
+        "msrp": 7800,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    }
+]

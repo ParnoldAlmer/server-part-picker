@@ -1,0 +1,216 @@
+[
+    {
+        "id": "cpu-intel-6980p",
+        "sku": "XEON-6980P",
+        "vendor": "Intel",
+        "name": "Xeon 6980P",
+        "family": "Granite Rapids",
+        "platform": "Intel",
+        "cores": 128,
+        "threads": 256,
+        "baseClock": 2.0,
+        "boostClock": 3.9,
+        "constraints": {
+            "socket": "LGA4677",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 500,
+            "maxMemSpeedMT": 6400,
+            "lanes": 80
+        },
+        "msrp": 12980,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-intel-8592-plus",
+        "sku": "XEON-8592+",
+        "vendor": "Intel",
+        "name": "Xeon 8592+",
+        "family": "Emerald Rapids",
+        "platform": "Intel",
+        "cores": 64,
+        "threads": 128,
+        "baseClock": 1.9,
+        "boostClock": 3.9,
+        "constraints": {
+            "socket": "LGA4677",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 350,
+            "maxMemSpeedMT": 5600,
+            "lanes": 80
+        },
+        "msrp": 8450,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-intel-8580",
+        "sku": "XEON-8580",
+        "vendor": "Intel",
+        "name": "Xeon Platinum 8580",
+        "family": "Sapphire Rapids",
+        "platform": "Intel",
+        "cores": 60,
+        "threads": 120,
+        "baseClock": 2.0,
+        "boostClock": 3.8,
+        "constraints": {
+            "socket": "LGA4677",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 350,
+            "maxMemSpeedMT": 4800,
+            "lanes": 80
+        },
+        "msrp": 11600,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-amd-9754",
+        "sku": "EPYC-9754",
+        "vendor": "AMD",
+        "name": "EPYC 9754",
+        "family": "Genoa",
+        "platform": "AMD",
+        "cores": 128,
+        "threads": 256,
+        "baseClock": 2.25,
+        "boostClock": 3.7,
+        "constraints": {
+            "socket": "SP5",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 360,
+            "maxMemSpeedMT": 4800,
+            "lanes": 128
+        },
+        "msrp": 9687,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-amd-9654",
+        "sku": "EPYC-9654",
+        "vendor": "AMD",
+        "name": "EPYC 9654",
+        "family": "Genoa",
+        "platform": "AMD",
+        "cores": 96,
+        "threads": 192,
+        "baseClock": 2.4,
+        "boostClock": 3.7,
+        "constraints": {
+            "socket": "SP5",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 360,
+            "maxMemSpeedMT": 4800,
+            "lanes": 128
+        },
+        "msrp": 11805,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-amd-9554",
+        "sku": "EPYC-9554",
+        "vendor": "AMD",
+        "name": "EPYC 9554",
+        "family": "Genoa",
+        "platform": "AMD",
+        "cores": 64,
+        "threads": 128,
+        "baseClock": 3.1,
+        "boostClock": 3.75,
+        "constraints": {
+            "socket": "SP5",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 360,
+            "maxMemSpeedMT": 4800,
+            "lanes": 128
+        },
+        "msrp": 6450,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-ampere-m128-30",
+        "sku": "M128-30",
+        "vendor": "Ampere",
+        "name": "Altra Max M128-30",
+        "family": "Altra Max",
+        "platform": "Ampere",
+        "cores": 128,
+        "threads": 128,
+        "baseClock": 3.0,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 250,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 4500,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-ampere-a192-32x",
+        "sku": "A192-32X",
+        "vendor": "Ampere",
+        "name": "AmpereOne A192-32X",
+        "family": "AmpereOne",
+        "platform": "Ampere",
+        "cores": 192,
+        "threads": 192,
+        "baseClock": 3.2,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                5
+            ],
+            "tdpW": 350,
+            "maxMemSpeedMT": 4800,
+            "lanes": 128
+        },
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "cpu-ampere-m80-28",
+        "sku": "M80-28",
+        "vendor": "Ampere",
+        "name": "Altra M80-28",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 80,
+        "threads": 80,
+        "baseClock": 2.8,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 210,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 3200,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    }
+]

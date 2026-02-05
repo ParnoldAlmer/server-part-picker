@@ -1,0 +1,104 @@
+[
+    {
+        "id": "mem-samsung-m386aag40mmb",
+        "sku": "M386AAG40MMB-CWE",
+        "vendor": "Samsung",
+        "name": "64GB DDR5 RDIMM",
+        "constraints": {
+            "ddrGen": 5,
+            "type": "RDIMM",
+            "speedMT": 4800,
+            "capacityGB": 64,
+            "ranks": 2,
+            "voltage": 1.1
+        },
+        "msrp": 420,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mem-micron-mta36asf8g72pz",
+        "sku": "MTA36ASF8G72PZ-3G2E1",
+        "vendor": "Micron",
+        "name": "64GB DDR5 RDIMM",
+        "constraints": {
+            "ddrGen": 5,
+            "type": "RDIMM",
+            "speedMT": 5600,
+            "capacityGB": 64,
+            "ranks": 2,
+            "voltage": 1.1
+        },
+        "msrp": 480,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mem-skhynix-hmcg94mebra",
+        "sku": "HMCG94MEBRA109N",
+        "vendor": "SK Hynix",
+        "name": "128GB DDR5 LRDIMM",
+        "constraints": {
+            "ddrGen": 5,
+            "type": "LRDIMM",
+            "speedMT": 4800,
+            "capacityGB": 128,
+            "ranks": 4,
+            "voltage": 1.1
+        },
+        "msrp": 890,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mem-samsung-m386aag40mmb-32g",
+        "sku": "M386AAG40MMB-32G",
+        "vendor": "Samsung",
+        "name": "32GB DDR5 RDIMM",
+        "constraints": {
+            "ddrGen": 5,
+            "type": "RDIMM",
+            "speedMT": 4800,
+            "capacityGB": 32,
+            "ranks": 2,
+            "voltage": 1.1
+        },
+        "msrp": 210,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mem-micron-mta18asf4g72pz",
+        "sku": "MTA18ASF4G72PZ-3G2R1",
+        "vendor": "Micron",
+        "name": "32GB DDR5 RDIMM",
+        "constraints": {
+            "ddrGen": 5,
+            "type": "RDIMM",
+            "speedMT": 6400,
+            "capacityGB": 32,
+            "ranks": 1,
+            "voltage": 1.1
+        },
+        "msrp": 250,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mem-samsung-m393aag40m32",
+        "sku": "M393AAG40M32-CWE",
+        "vendor": "Samsung",
+        "name": "256GB DDR5 LRDIMM",
+        "constraints": {
+            "ddrGen": 5,
+            "type": "LRDIMM",
+            "speedMT": 4800,
+            "capacityGB": 256,
+            "ranks": 8,
+            "voltage": 1.1
+        },
+        "msrp": 1850,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    }
+]

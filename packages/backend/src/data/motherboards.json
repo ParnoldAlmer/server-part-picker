@@ -1,0 +1,305 @@
+[
+    {
+        "id": "mobo-supermicro-x13dei-t",
+        "sku": "X13DEI-T",
+        "vendor": "Supermicro",
+        "name": "X13 Dual Intel LGA4677",
+        "formFactor": "EATX",
+        "socketCount": 2,
+        "constraints": {
+            "socket": "LGA4677",
+            "mem": {
+                "ddrGen": 5,
+                "types": [
+                    "RDIMM",
+                    "LRDIMM"
+                ],
+                "slots": 32,
+                "maxPerDimmGB": 128,
+                "maxTotalGB": 4096,
+                "channels": 8
+            },
+            "pcie": {
+                "gen": 5,
+                "lanes": 160,
+                "slots": [
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 8,
+                        "formFactor": "x8"
+                    },
+                    {
+                        "gen": 4,
+                        "lanes": 8,
+                        "formFactor": "x8"
+                    }
+                ]
+            },
+            "storageHeaders": [
+                {
+                    "type": "M.2",
+                    "count": 2
+                },
+                {
+                    "type": "U.2",
+                    "count": 8
+                }
+            ]
+        },
+        "msrp": 1850,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mobo-supermicro-h13ssl-n",
+        "sku": "H13SSL-N",
+        "vendor": "Supermicro",
+        "name": "H13 Single AMD SP5",
+        "formFactor": "ATX",
+        "socketCount": 1,
+        "constraints": {
+            "socket": "SP5",
+            "mem": {
+                "ddrGen": 5,
+                "types": [
+                    "RDIMM",
+                    "LRDIMM"
+                ],
+                "slots": 12,
+                "maxPerDimmGB": 256,
+                "maxTotalGB": 3072,
+                "channels": 12
+            },
+            "pcie": {
+                "gen": 5,
+                "lanes": 128,
+                "slots": [
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 4,
+                        "lanes": 8,
+                        "formFactor": "x8"
+                    }
+                ]
+            },
+            "storageHeaders": [
+                {
+                    "type": "M.2",
+                    "count": 2
+                },
+                {
+                    "type": "SATA",
+                    "count": 8
+                }
+            ]
+        },
+        "msrp": 980,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mobo-gigabyte-mz73-lm0",
+        "sku": "MZ73-LM0",
+        "vendor": "Gigabyte",
+        "name": "MZ73 Dual AMD SP5",
+        "formFactor": "EATX",
+        "socketCount": 2,
+        "constraints": {
+            "socket": "SP5",
+            "mem": {
+                "ddrGen": 5,
+                "types": [
+                    "RDIMM",
+                    "LRDIMM"
+                ],
+                "slots": 24,
+                "maxPerDimmGB": 256,
+                "maxTotalGB": 6144,
+                "channels": 12
+            },
+            "pcie": {
+                "gen": 5,
+                "lanes": 256,
+                "slots": [
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 8,
+                        "formFactor": "x8"
+                    }
+                ]
+            },
+            "storageHeaders": [
+                {
+                    "type": "M.2",
+                    "count": 4
+                },
+                {
+                    "type": "U.2",
+                    "count": 4
+                }
+            ]
+        },
+        "msrp": 2100,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mobo-ampere-s80-mr",
+        "sku": "S80-MR",
+        "vendor": "Ampere",
+        "name": "Mt. Jade Dual Socket",
+        "formFactor": "EATX",
+        "socketCount": 2,
+        "constraints": {
+            "socket": "LGA4926",
+            "mem": {
+                "ddrGen": 5,
+                "types": [
+                    "RDIMM"
+                ],
+                "slots": 16,
+                "maxPerDimmGB": 256,
+                "maxTotalGB": 4096,
+                "channels": 8
+            },
+            "pcie": {
+                "gen": 5,
+                "lanes": 256,
+                "slots": [
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 4,
+                        "lanes": 8,
+                        "formFactor": "x8"
+                    }
+                ]
+            },
+            "storageHeaders": [
+                {
+                    "type": "M.2",
+                    "count": 2
+                },
+                {
+                    "type": "U.2",
+                    "count": 8
+                }
+            ]
+        },
+        "msrp": 1400,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mobo-tyan-s8050",
+        "sku": "S8050",
+        "vendor": "Tyan",
+        "name": "Thunder HX FT83D-B8050",
+        "formFactor": "EATX",
+        "socketCount": 2,
+        "constraints": {
+            "socket": "SP5",
+            "mem": {
+                "ddrGen": 5,
+                "types": [
+                    "RDIMM"
+                ],
+                "slots": 24,
+                "maxPerDimmGB": 128,
+                "maxTotalGB": 3072,
+                "channels": 12
+            },
+            "pcie": {
+                "gen": 5,
+                "lanes": 256,
+                "slots": [
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 16,
+                        "formFactor": "x16"
+                    },
+                    {
+                        "gen": 5,
+                        "lanes": 8,
+                        "formFactor": "x8"
+                    }
+                ]
+            },
+            "storageHeaders": [
+                {
+                    "type": "M.2",
+                    "count": 2
+                },
+                {
+                    "type": "SATA",
+                    "count": 6
+                }
+            ]
+        },
+        "msrp": 1650,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    }
+]

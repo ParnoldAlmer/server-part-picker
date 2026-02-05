@@ -1,0 +1,146 @@
+[
+    {
+        "id": "storage-samsung-pm9a3",
+        "sku": "MZQL23T8HCLS",
+        "vendor": "Samsung",
+        "name": "PM9A3 3.84TB U.2",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "U.2",
+            "interface": "NVMe",
+            "capacityTB": 3.84,
+            "tdpW": 18
+        },
+        "readSpeedMBps": 6900,
+        "writeSpeedMBps": 4000,
+        "msrp": 580,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-micron-7450-pro",
+        "sku": "MTFDKCC7T6TFS",
+        "vendor": "Micron",
+        "name": "7450 PRO 7.68TB U.2",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "U.2",
+            "interface": "NVMe",
+            "capacityTB": 7.68,
+            "tdpW": 20
+        },
+        "readSpeedMBps": 7400,
+        "writeSpeedMBps": 6800,
+        "msrp": 1120,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-wd-ultrastar-dc-sn840",
+        "sku": "WUS4BA138DSP3X3",
+        "vendor": "Western Digital",
+        "name": "Ultrastar DC SN840 3.84TB U.2",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "U.2",
+            "interface": "NVMe",
+            "capacityTB": 3.84,
+            "tdpW": 17
+        },
+        "readSpeedMBps": 6600,
+        "writeSpeedMBps": 4100,
+        "msrp": 620,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-samsung-pm1733",
+        "sku": "MZWLJ15THALA",
+        "vendor": "Samsung",
+        "name": "PM1733 15.36TB SFF",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "SFF",
+            "interface": "NVMe",
+            "capacityTB": 15.36,
+            "tdpW": 25
+        },
+        "readSpeedMBps": 6800,
+        "writeSpeedMBps": 3800,
+        "msrp": 2450,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-seagate-exos-x18",
+        "sku": "ST18000NM000J",
+        "vendor": "Seagate",
+        "name": "Exos X18 18TB LFF",
+        "type": "HDD",
+        "constraints": {
+            "formFactor": "LFF",
+            "interface": "SATA",
+            "capacityTB": 18,
+            "tdpW": 12
+        },
+        "readSpeedMBps": 270,
+        "writeSpeedMBps": 270,
+        "msrp": 320,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-wd-ultrastar-dc-hc570",
+        "sku": "WUH722020ALE6L4",
+        "vendor": "Western Digital",
+        "name": "Ultrastar DC HC570 20TB LFF",
+        "type": "HDD",
+        "constraints": {
+            "formFactor": "LFF",
+            "interface": "SATA",
+            "capacityTB": 20,
+            "tdpW": 12
+        },
+        "readSpeedMBps": 272,
+        "writeSpeedMBps": 272,
+        "msrp": 380,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-intel-d5-p5520",
+        "sku": "SSDPF2KX076TZ",
+        "vendor": "Intel",
+        "name": "D5-P5520 7.68TB U.2",
+        "type": "SSD",
+        "constraints": {
+            "formFactor": "U.2",
+            "interface": "NVMe",
+            "capacityTB": 7.68,
+            "tdpW": 22
+        },
+        "readSpeedMBps": 7000,
+        "writeSpeedMBps": 3200,
+        "msrp": 1050,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "storage-sk-hynix-pe8110",
+        "sku": "PE8110-3T84",
+        "vendor": "SK Hynix",
+        "name": "PE8110 3.84TB E1.S",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "E1.S",
+            "interface": "NVMe",
+            "capacityTB": 3.84,
+            "tdpW": 20
+        },
+        "readSpeedMBps": 7200,
+        "writeSpeedMBps": 3600,
+        "msrp": 650,
+        "currency": "USD",
+        "lastUpdated": "2026-02-04"
+    }
+]
