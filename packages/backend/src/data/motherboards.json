@@ -5,19 +5,19 @@
         "vendor": "Supermicro",
         "name": "X13 Dual Intel LGA4677",
         "formFactor": "EATX",
-        "socketCount": 2,
         "constraints": {
             "socket": "LGA4677",
-            "mem": {
+            "memory": {
                 "ddrGen": 5,
-                "types": [
+                "dimmTypes": [
                     "RDIMM",
                     "LRDIMM"
                 ],
-                "slots": 32,
+                "socketsCount": 2,
+                "channelsPerSocket": 8,
+                "dimmsPerChannel": 2,
                 "maxPerDimmGB": 128,
-                "maxTotalGB": 4096,
-                "channels": 8
+                "maxTotalGB": 4096
             },
             "pcie": {
                 "gen": 5,
@@ -45,16 +45,25 @@
                     }
                 ]
             },
-            "storageHeaders": [
-                {
-                    "type": "M.2",
-                    "count": 2
-                },
-                {
-                    "type": "U.2",
-                    "count": 8
-                }
-            ]
+            "storage": {
+                "headers": [],
+                "onboardSlots": [
+                    {
+                        "type": "M.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 2
+                    },
+                    {
+                        "type": "U.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 8
+                    }
+                ]
+            }
         },
         "msrp": 1850,
         "currency": "USD",
@@ -66,19 +75,19 @@
         "vendor": "Supermicro",
         "name": "H13 Single AMD SP5",
         "formFactor": "ATX",
-        "socketCount": 1,
         "constraints": {
             "socket": "SP5",
-            "mem": {
+            "memory": {
                 "ddrGen": 5,
-                "types": [
+                "dimmTypes": [
                     "RDIMM",
                     "LRDIMM"
                 ],
-                "slots": 12,
+                "socketsCount": 1,
+                "channelsPerSocket": 12,
+                "dimmsPerChannel": 1,
                 "maxPerDimmGB": 256,
-                "maxTotalGB": 3072,
-                "channels": 12
+                "maxTotalGB": 3072
             },
             "pcie": {
                 "gen": 5,
@@ -106,16 +115,23 @@
                     }
                 ]
             },
-            "storageHeaders": [
-                {
-                    "type": "M.2",
-                    "count": 2
-                },
-                {
-                    "type": "SATA",
-                    "count": 8
-                }
-            ]
+            "storage": {
+                "headers": [
+                    {
+                        "type": "SATA",
+                        "count": 8
+                    }
+                ],
+                "onboardSlots": [
+                    {
+                        "type": "M.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 2
+                    }
+                ]
+            }
         },
         "msrp": 980,
         "currency": "USD",
@@ -127,19 +143,19 @@
         "vendor": "Gigabyte",
         "name": "MZ73 Dual AMD SP5",
         "formFactor": "EATX",
-        "socketCount": 2,
         "constraints": {
             "socket": "SP5",
-            "mem": {
+            "memory": {
                 "ddrGen": 5,
-                "types": [
+                "dimmTypes": [
                     "RDIMM",
                     "LRDIMM"
                 ],
-                "slots": 24,
+                "socketsCount": 2,
+                "channelsPerSocket": 12,
+                "dimmsPerChannel": 1,
                 "maxPerDimmGB": 256,
-                "maxTotalGB": 6144,
-                "channels": 12
+                "maxTotalGB": 6144
             },
             "pcie": {
                 "gen": 5,
@@ -172,16 +188,25 @@
                     }
                 ]
             },
-            "storageHeaders": [
-                {
-                    "type": "M.2",
-                    "count": 4
-                },
-                {
-                    "type": "U.2",
-                    "count": 4
-                }
-            ]
+            "storage": {
+                "headers": [],
+                "onboardSlots": [
+                    {
+                        "type": "M.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 4
+                    },
+                    {
+                        "type": "U.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 4
+                    }
+                ]
+            }
         },
         "msrp": 2100,
         "currency": "USD",
@@ -193,18 +218,18 @@
         "vendor": "Ampere",
         "name": "Mt. Jade Dual Socket",
         "formFactor": "EATX",
-        "socketCount": 2,
         "constraints": {
             "socket": "LGA4926",
-            "mem": {
+            "memory": {
                 "ddrGen": 5,
-                "types": [
+                "dimmTypes": [
                     "RDIMM"
                 ],
-                "slots": 16,
+                "socketsCount": 2,
+                "channelsPerSocket": 8,
+                "dimmsPerChannel": 1,
                 "maxPerDimmGB": 256,
-                "maxTotalGB": 4096,
-                "channels": 8
+                "maxTotalGB": 4096
             },
             "pcie": {
                 "gen": 5,
@@ -232,16 +257,25 @@
                     }
                 ]
             },
-            "storageHeaders": [
-                {
-                    "type": "M.2",
-                    "count": 2
-                },
-                {
-                    "type": "U.2",
-                    "count": 8
-                }
-            ]
+            "storage": {
+                "headers": [],
+                "onboardSlots": [
+                    {
+                        "type": "M.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 2
+                    },
+                    {
+                        "type": "U.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 8
+                    }
+                ]
+            }
         },
         "msrp": 1400,
         "currency": "USD",
@@ -253,18 +287,18 @@
         "vendor": "Tyan",
         "name": "Thunder HX FT83D-B8050",
         "formFactor": "EATX",
-        "socketCount": 2,
         "constraints": {
             "socket": "SP5",
-            "mem": {
+            "memory": {
                 "ddrGen": 5,
-                "types": [
+                "dimmTypes": [
                     "RDIMM"
                 ],
-                "slots": 24,
+                "socketsCount": 2,
+                "channelsPerSocket": 12,
+                "dimmsPerChannel": 1,
                 "maxPerDimmGB": 128,
-                "maxTotalGB": 3072,
-                "channels": 12
+                "maxTotalGB": 3072
             },
             "pcie": {
                 "gen": 5,
@@ -287,16 +321,23 @@
                     }
                 ]
             },
-            "storageHeaders": [
-                {
-                    "type": "M.2",
-                    "count": 2
-                },
-                {
-                    "type": "SATA",
-                    "count": 6
-                }
-            ]
+            "storage": {
+                "headers": [
+                    {
+                        "type": "SATA",
+                        "count": 6
+                    }
+                ],
+                "onboardSlots": [
+                    {
+                        "type": "M.2",
+                        "interface": "NVMe",
+                        "pcieGen": 5,
+                        "lanes": 4,
+                        "count": 2
+                    }
+                ]
+            }
         },
         "msrp": 1650,
         "currency": "USD",

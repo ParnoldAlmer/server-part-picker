@@ -38,18 +38,19 @@
             ],
             "bays": [
                 {
-                    "type": "SFF",
-                    "count": 24,
+                    "formFactor": "2.5\"",
                     "interface": "NVMe",
-                    "perNode": 6,
-                    "hotSwap": true
+                    "count": 24,
+                    "hotSwap": true,
+                    "perNode": true
                 }
             ],
             "psu": {
                 "maxWatts": 2400,
                 "count": 2,
                 "redundancy": true
-            }
+            },
+            "risers": null
         },
         "msrp": 8500,
         "currency": "USD",
@@ -80,18 +81,19 @@
             ],
             "bays": [
                 {
-                    "type": "U.2",
-                    "count": 12,
+                    "formFactor": "U.2",
                     "interface": "NVMe",
-                    "perNode": 6,
-                    "hotSwap": true
+                    "count": 12,
+                    "hotSwap": true,
+                    "perNode": true
                 }
             ],
             "psu": {
                 "maxWatts": 2000,
                 "count": 2,
                 "redundancy": true
-            }
+            },
+            "risers": null
         },
         "msrp": 6200,
         "currency": "USD",
@@ -115,16 +117,18 @@
             ],
             "bays": [
                 {
-                    "type": "SFF",
-                    "count": 16,
+                    "formFactor": "2.5\"",
                     "interface": "SAS",
-                    "hotSwap": true
+                    "count": 16,
+                    "hotSwap": true,
+                    "perNode": false
                 },
                 {
-                    "type": "U.2",
-                    "count": 8,
+                    "formFactor": "U.2",
                     "interface": "NVMe",
-                    "hotSwap": true
+                    "count": 8,
+                    "hotSwap": true,
+                    "perNode": false
                 }
             ],
             "psu": {
@@ -172,17 +176,19 @@
             ],
             "bays": [
                 {
-                    "type": "SFF",
-                    "count": 24,
+                    "formFactor": "2.5\"",
                     "interface": "SAS",
-                    "hotSwap": true
+                    "count": 24,
+                    "hotSwap": true,
+                    "perNode": false
                 }
             ],
             "psu": {
                 "maxWatts": 1600,
                 "count": 2,
                 "redundancy": true
-            }
+            },
+            "risers": null
         },
         "currency": "USD",
         "lastUpdated": "2026-02-04"
@@ -205,17 +211,19 @@
             ],
             "bays": [
                 {
-                    "type": "SFF",
-                    "count": 8,
+                    "formFactor": "2.5\"",
                     "interface": "SAS",
-                    "hotSwap": true
+                    "count": 8,
+                    "hotSwap": true,
+                    "perNode": false
                 }
             ],
             "psu": {
                 "maxWatts": 2000,
                 "count": 2,
                 "redundancy": true
-            }
+            },
+            "risers": null
         },
         "currency": "USD",
         "lastUpdated": "2026-02-04"
@@ -238,10 +246,11 @@
             ],
             "bays": [
                 {
-                    "type": "LFF",
-                    "count": 12,
+                    "formFactor": "3.5\"",
                     "interface": "SATA",
-                    "hotSwap": true
+                    "count": 12,
+                    "hotSwap": true,
+                    "perNode": false
                 }
             ],
             "psu": {

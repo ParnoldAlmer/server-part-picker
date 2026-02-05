@@ -60,7 +60,7 @@
         "name": "PM1733 15.36TB SFF",
         "type": "NVMe",
         "constraints": {
-            "formFactor": "SFF",
+            "formFactor": "2.5\"",
             "interface": "NVMe",
             "capacityTB": 15.36,
             "tdpW": 25
@@ -78,7 +78,7 @@
         "name": "Exos X18 18TB LFF",
         "type": "HDD",
         "constraints": {
-            "formFactor": "LFF",
+            "formFactor": "3.5\"",
             "interface": "SATA",
             "capacityTB": 18,
             "tdpW": 12
@@ -96,7 +96,7 @@
         "name": "Ultrastar DC HC570 20TB LFF",
         "type": "HDD",
         "constraints": {
-            "formFactor": "LFF",
+            "formFactor": "3.5\"",
             "interface": "SATA",
             "capacityTB": 20,
             "tdpW": 12

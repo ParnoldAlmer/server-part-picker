@@ -13,22 +13,19 @@ export type MemoryGen = 4 | 5;
 export type FormFactor = "1U" | "2U" | "4U" | "Blade";
 export type MotherboardFormFactor = "ATX" | "EATX" | "Proprietary";
 
-export type BayType = "SFF" | "LFF" | "U.2" | "U.3" | "E1.S" | "M.2";
-export type StorageInterface = "SATA" | "SAS" | "NVMe";
+export type BayFormFactor = "2.5\"" | "3.5\"" | "E1.S" | "E1.L" | "E3.S" | "E3.L" | "M.2" | "U.2" | "U.3";
+export type BayInterface = "SATA" | "SAS" | "NVMe";
+
 
 // Constraints for Chassis
 export interface ChassisConstraints {
-    nodes: {
-        index: number;
-        moboFormFactors: MotherboardFormFactor[];
-        cpuCount: 1 | 2;
-    }[];
+    nodes: NodeConstraints[];
     bays: {
-        type: BayType;
+        formFactor: BayFormFactor;
+        interface: BayInterface;
         count: number;
-        interface: StorageInterface;
-        perNode?: number; // If defined, bays split equally per node
         hotSwap: boolean;
+        perNode?: boolean; // If true, bays are per node; if false, they are shared/global
     }[];
     psu: {
         maxWatts: number;
@@ -42,16 +39,23 @@ export interface ChassisConstraints {
     }[];
 }
 
+export interface NodeConstraints {
+    index: number;
+    moboFormFactors: MotherboardFormFactor[];
+    cpuCount: 1 | 2;
+}
+
 // Constraints for Motherboard
 export interface MotherboardConstraints {
     socket: SocketType;
-    mem: {
+    memory: {
         ddrGen: MemoryGen;
-        types: MemoryType[];
-        slots: number;
+        dimmTypes: MemoryType[];
+        socketsCount: 1 | 2;
+        channelsPerSocket: number;
+        dimmsPerChannel: number;
         maxPerDimmGB: number;
         maxTotalGB: number;
-        channels: number;
     };
     pcie: {
         gen: number;
@@ -62,10 +66,19 @@ export interface MotherboardConstraints {
             formFactor: string; // "x16", "x8", "x4"
         }[];
     };
-    storageHeaders: {
-        type: string; // "M.2", "U.2", "SATA"
-        count: number;
-    }[];
+    storage: {
+        headers: {
+            type: "SATA" | "SAS";
+            count: number;
+        }[];
+        onboardSlots: {
+            type: BayFormFactor; // Usually "M.2" or "U.2"
+            interface: BayInterface;
+            pcieGen: number;
+            lanes: number;
+            count: number;
+        }[];
+    };
 }
 
 // Constraints for CPU
@@ -89,8 +102,8 @@ export interface MemoryConstraints {
 
 // Constraints for Storage
 export interface StorageConstraints {
-    formFactor: BayType;
-    interface: StorageInterface;
+    formFactor: BayFormFactor;
+    interface: BayInterface;
     capacityTB: number;
     tdpW: number;
 }
@@ -114,7 +127,6 @@ export interface Motherboard {
     vendor: string;
     name: string;
     formFactor: MotherboardFormFactor;
-    socketCount: 1 | 2;
     constraints: MotherboardConstraints;
     msrp?: number;
     currency?: string;
