@@ -25,7 +25,7 @@ export function NodeTabs() {
         <div className="space-y-6">
             {/* Node Tabs */}
             <div className="flex gap-2 border-b border-slate-700">
-                {build.nodes.map((node, idx) => (
+                {build.nodes.map((_, idx) => (
                     <button
                         key={idx}
                         onClick={() => setSelectedNodeIndex(idx)}
@@ -53,9 +53,9 @@ export function NodeTabs() {
                                 {currentNode.motherboard.vendor} • {currentNode.motherboard.constraints.socket}
                             </div>
                             <div className="text-xs text-slate-500 mt-1">
-                                {currentNode.motherboard.socketCount} socket{currentNode.motherboard.socketCount > 1 ? 's' : ''} •
-                                DDR{currentNode.motherboard.constraints.mem.ddrGen} •
-                                {currentNode.motherboard.constraints.mem.slots} DIMM slots
+                                {currentNode.motherboard.constraints.memory.socketsCount} socket{currentNode.motherboard.constraints.memory.socketsCount > 1 ? 's' : ''} •
+                                DDR{currentNode.motherboard.constraints.memory.ddrGen} •
+                                {currentNode.motherboard.constraints.memory.channelsPerSocket * currentNode.motherboard.constraints.memory.dimmsPerChannel * currentNode.motherboard.constraints.memory.socketsCount} DIMM slots
                             </div>
                         </div>
                         <button
@@ -103,9 +103,9 @@ export function NodeTabs() {
                                         </div>
                                         <div className="flex gap-4 text-xs text-slate-500 mt-2">
                                             <span>{mobo.constraints.socket}</span>
-                                            <span>{mobo.socketCount} socket{mobo.socketCount > 1 ? 's' : ''}</span>
-                                            <span>DDR{mobo.constraints.mem.ddrGen}</span>
-                                            <span>{mobo.constraints.mem.slots} slots</span>
+                                            <span>{mobo.constraints.memory.socketsCount} socket{mobo.constraints.memory.socketsCount > 1 ? 's' : ''}</span>
+                                            <span>DDR{mobo.constraints.memory.ddrGen}</span>
+                                            <span>{mobo.constraints.memory.channelsPerSocket * mobo.constraints.memory.dimmsPerChannel * mobo.constraints.memory.socketsCount} slots</span>
                                         </div>
                                         {mobo.msrp && (
                                             <div className="text-blue-400 font-semibold mt-2">

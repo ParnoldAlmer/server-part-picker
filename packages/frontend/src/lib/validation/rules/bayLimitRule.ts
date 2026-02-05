@@ -26,14 +26,14 @@ export const bayLimitRule: ValidationRule = (build: Build): ValidationIssue[] =>
 
     // Check each bay type
     for (const bayConfig of bayConstraints) {
-        const driveCount = storageByType[bayConfig.type] || 0;
+        const driveCount = storageByType[bayConfig.formFactor] || 0;
 
         if (driveCount > bayConfig.count) {
             issues.push({
                 code: 'BAY_LIMIT_EXCEEDED',
                 severity: 'error',
                 path: 'chassis',
-                message: `${driveCount} ${bayConfig.type} drives exceeds ${bayConfig.count} available ${bayConfig.type} bays`,
+                message: `${driveCount} ${bayConfig.formFactor} drives exceeds ${bayConfig.count} available ${bayConfig.formFactor} bays`,
             });
         }
 
@@ -44,13 +44,13 @@ export const bayLimitRule: ValidationRule = (build: Build): ValidationIssue[] =>
 
             for (let storageIdx = 0; storageIdx < node.storage.length; storageIdx++) {
                 const drive = node.storage[storageIdx];
-                if (drive.constraints.formFactor === bayConfig.type &&
+                if (drive.constraints.formFactor === bayConfig.formFactor &&
                     drive.constraints.interface !== bayConfig.interface) {
                     issues.push({
                         code: 'BAY_INTERFACE_MISMATCH',
                         severity: 'error',
                         path: `nodes[${i}].storage[${storageIdx}]`,
-                        message: `${drive.constraints.interface} drive incompatible with ${bayConfig.interface}-only ${bayConfig.type} bay`,
+                        message: `${drive.constraints.interface} drive incompatible with ${bayConfig.interface}-only ${bayConfig.formFactor} bay`,
                     });
                 }
             }
@@ -58,20 +58,21 @@ export const bayLimitRule: ValidationRule = (build: Build): ValidationIssue[] =>
 
         // Warn if per-node limit exists and is violated
         if (bayConfig.perNode) {
+            const baysPerNode = Math.floor(bayConfig.count / build.nodes.length);
             for (let i = 0; i < build.nodes.length; i++) {
                 const node = build.nodes[i];
                 if (!node.storage) continue;
 
                 const nodeStorage = node.storage.filter(
-                    s => s.constraints.formFactor === bayConfig.type
+                    s => s.constraints.formFactor === bayConfig.formFactor
                 );
 
-                if (nodeStorage.length > bayConfig.perNode) {
+                if (nodeStorage.length > baysPerNode) {
                     issues.push({
                         code: 'BAY_PER_NODE_EXCEEDED',
                         severity: 'error',
                         path: `nodes[${i}].storage`,
-                        message: `Node ${i} has ${nodeStorage.length} ${bayConfig.type} drives, exceeds ${bayConfig.perNode} per-node limit`,
+                        message: `Node ${i} has ${nodeStorage.length} ${bayConfig.formFactor} drives, exceeds ${baysPerNode} per-node limit`,
                     });
                 }
             }

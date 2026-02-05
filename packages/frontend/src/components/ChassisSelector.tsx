@@ -69,7 +69,7 @@ export function ChassisSelector() {
                             <div className="flex justify-between">
                                 <span className="text-slate-400">Bays:</span>
                                 <span className="font-medium">
-                                    {c.constraints.bays.map(b => `${b.count}× ${b.type}`).join(', ')}
+                                    {c.constraints.bays.map(b => `${b.count}× ${b.formFactor}`).join(', ')}
                                 </span>
                             </div>
                             <div className="flex justify-between">

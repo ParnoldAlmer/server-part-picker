@@ -13,8 +13,8 @@ export const memoryBalanceRule: ValidationRule = (build: Build): ValidationIssue
         const node = build.nodes[i];
         if (!node.motherboard || node.memory.length === 0) continue;
 
-        const channels = node.motherboard.constraints.mem.channels;
-        const cpuCount = node.motherboard.socketCount;
+        const channels = node.motherboard.constraints.memory.channelsPerSocket;
+        const cpuCount = node.motherboard.constraints.memory.socketsCount;
         const totalChannels = channels * cpuCount;
 
         // Warn if not populated evenly across channels

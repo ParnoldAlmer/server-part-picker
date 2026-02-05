@@ -29,12 +29,12 @@ describe('Socket Rule', () => {
                         vendor: 'Test',
                         name: 'AMD SP5 Board',
                         formFactor: 'EATX',
-                        socketCount: 1,
+
                         constraints: {
                             socket: 'SP5',
-                            mem: { ddrGen: 5, types: ['RDIMM'], slots: 12, maxPerDimmGB: 128, maxTotalGB: 1536, channels: 12 },
+                            memory: { ddrGen: 5, dimmTypes: ['RDIMM'], channelsPerSocket: 12, dimmsPerChannel: 1, socketsCount: 1, maxPerDimmGB: 128, maxTotalGB: 1536 },
                             pcie: { gen: 5, lanes: 128, slots: [] },
-                            storageHeaders: [],
+                            storage: { headers: [], onboardSlots: [] },
                         },
                     },
                     cpus: [
@@ -80,12 +80,12 @@ describe('Socket Rule', () => {
                         vendor: 'Test',
                         name: 'AMD SP5 Board',
                         formFactor: 'EATX',
-                        socketCount: 1,
+
                         constraints: {
                             socket: 'SP5',
-                            mem: { ddrGen: 5, types: ['RDIMM'], slots: 12, maxPerDimmGB: 128, maxTotalGB: 1536, channels: 12 },
+                            memory: { ddrGen: 5, dimmTypes: ['RDIMM'], channelsPerSocket: 12, dimmsPerChannel: 1, socketsCount: 1, maxPerDimmGB: 128, maxTotalGB: 1536 },
                             pcie: { gen: 5, lanes: 128, slots: [] },
-                            storageHeaders: [],
+                            storage: { headers: [], onboardSlots: [] },
                         },
                     },
                     cpus: [
@@ -131,12 +131,11 @@ describe('Memory Type Rule', () => {
                         vendor: 'Test',
                         name: 'DDR5 Board',
                         formFactor: 'EATX',
-                        socketCount: 1,
                         constraints: {
                             socket: 'SP5',
-                            mem: { ddrGen: 5, types: ['RDIMM'], slots: 12, maxPerDimmGB: 128, maxTotalGB: 1536, channels: 12 },
+                            memory: { ddrGen: 5, dimmTypes: ['RDIMM'], channelsPerSocket: 12, dimmsPerChannel: 1, socketsCount: 1, maxPerDimmGB: 128, maxTotalGB: 1536 },
                             pcie: { gen: 5, lanes: 128, slots: [] },
-                            storageHeaders: [],
+                            storage: { headers: [], onboardSlots: [] },
                         },
                     },
                     cpus: [],
@@ -177,12 +176,11 @@ describe('Memory Type Rule', () => {
                         vendor: 'Test',
                         name: 'DDR5 Board',
                         formFactor: 'EATX',
-                        socketCount: 1,
                         constraints: {
                             socket: 'SP5',
-                            mem: { ddrGen: 5, types: ['RDIMM', 'LRDIMM'], slots: 12, maxPerDimmGB: 128, maxTotalGB: 1536, channels: 12 },
+                            memory: { ddrGen: 5, dimmTypes: ['RDIMM', 'LRDIMM'], channelsPerSocket: 12, dimmsPerChannel: 1, socketsCount: 1, maxPerDimmGB: 128, maxTotalGB: 1536 },
                             pcie: { gen: 5, lanes: 128, slots: [] },
-                            storageHeaders: [],
+                            storage: { headers: [], onboardSlots: [] },
                         },
                     },
                     cpus: [],
@@ -238,7 +236,7 @@ describe('Bay Limit Rule', () => {
                 formFactor: '2U',
                 constraints: {
                     nodes: [{ index: 0, moboFormFactors: ['EATX'], cpuCount: 2 }],
-                    bays: [{ type: 'SFF', count: 4, interface: 'NVMe', hotSwap: true }],
+                    bays: [{ formFactor: '2.5"', count: 4, interface: 'NVMe', hotSwap: true }],
                     psu: { maxWatts: 2000, count: 2, redundancy: true },
                 },
             },
@@ -255,7 +253,7 @@ describe('Bay Limit Rule', () => {
                         name: 'Test SSD',
                         type: 'NVMe' as const,
                         constraints: {
-                            formFactor: 'SFF' as const,
+                            formFactor: '2.5"' as const,
                             interface: 'NVMe' as const,
                             capacityTB: 1,
                             tdpW: 8,

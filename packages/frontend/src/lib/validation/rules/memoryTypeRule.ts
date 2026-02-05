@@ -13,7 +13,7 @@ export const memoryTypeRule: ValidationRule = (build: Build): ValidationIssue[] 
         const node = build.nodes[i];
         if (!node.motherboard || node.memory.length === 0) continue;
 
-        const moboMemConstraints = node.motherboard.constraints.mem;
+        const moboMemConstraints = node.motherboard.constraints.memory;
         const memoryTypes = new Set<string>();
 
         for (let memIdx = 0; memIdx < node.memory.length; memIdx++) {
@@ -31,12 +31,12 @@ export const memoryTypeRule: ValidationRule = (build: Build): ValidationIssue[] 
             }
 
             // Check memory type allowed
-            if (!moboMemConstraints.types.includes(memConstraints.type)) {
+            if (!moboMemConstraints.dimmTypes.includes(memConstraints.type)) {
                 issues.push({
                     code: 'MEMORY_TYPE_NOT_SUPPORTED',
                     severity: 'error',
                     path: `nodes[${i}].memory[${memIdx}]`,
-                    message: `${memConstraints.type} not supported (motherboard accepts: ${moboMemConstraints.types.join(', ')})`,
+                    message: `${memConstraints.type} not supported (motherboard accepts: ${moboMemConstraints.dimmTypes.join(', ')})`,
                 });
             }
 
@@ -54,12 +54,13 @@ export const memoryTypeRule: ValidationRule = (build: Build): ValidationIssue[] 
         }
 
         // Check slot count
-        if (node.memory.length > moboMemConstraints.slots) {
+        const totalSlots = moboMemConstraints.channelsPerSocket * moboMemConstraints.dimmsPerChannel * moboMemConstraints.socketsCount;
+        if (node.memory.length > totalSlots) {
             issues.push({
                 code: 'MEMORY_SLOT_EXCEEDED',
                 severity: 'error',
                 path: `nodes[${i}].memory`,
-                message: `${node.memory.length} DIMMs exceeds ${moboMemConstraints.slots} available slots`,
+                message: `${node.memory.length} DIMMs exceeds ${totalSlots} available slots`,
             });
         }
 

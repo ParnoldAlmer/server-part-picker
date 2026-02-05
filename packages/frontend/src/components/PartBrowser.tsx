@@ -17,7 +17,7 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
     const [storage, setStorage] = useState<Storage[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const { build, addNodeCPU, addNodeMemory, addNodeStorage, removeNodeCPU, removeNodeMemory, removeNodeStorage } = useBuildStore();
+    const { build, addNodeCPU, addNodeMemory, addNodeStorage, removeNodeCPU } = useBuildStore();
     const node = build.nodes[nodeIndex];
 
     // Load CPUs
@@ -215,8 +215,8 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                 {/* Memory */}
                 {!loading && selectedType === 'memory' && memory.map((mem) => {
                     const isCompatible = !node.motherboard || (
-                        node.motherboard.constraints.mem.ddrGen === mem.constraints.ddrGen &&
-                        node.motherboard.constraints.mem.types.includes(mem.constraints.type)
+                        node.motherboard.constraints.memory.ddrGen === mem.constraints.ddrGen &&
+                        node.motherboard.constraints.memory.dimmTypes.includes(mem.constraints.type)
                     );
 
                     return (
@@ -240,7 +240,7 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     </div>
                                     {!isCompatible && node.motherboard && (
                                         <p className="mt-2 text-xs text-red-400">
-                                            ⚠️ Incompatible (needs DDR{node.motherboard.constraints.mem.ddrGen} {node.motherboard.constraints.mem.types.join('/')})
+                                            ⚠️ Incompatible (needs DDR{node.motherboard.constraints.memory.ddrGen} {node.motherboard.constraints.memory.dimmTypes.join('/')})
                                         </p>
                                     )}
                                 </div>

@@ -1,5 +1,5 @@
 import type { ValidationRule, ValidationIssue } from '../types';
-import type { Build, Node } from '../../../types/hardware';
+import type { Build } from '../../../types/hardware';
 
 /**
  * Socket Rule: CPU socket must match motherboard socket
