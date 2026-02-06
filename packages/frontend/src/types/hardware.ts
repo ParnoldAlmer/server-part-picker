@@ -37,6 +37,11 @@ export interface ChassisConstraints {
         lanes: number;
         gen: number;
     }[];
+    /**
+     * Max physical DIMM slots available per node.
+     * If undefined, no limit is enforced.
+     */
+    maxDimmsPerNode?: number;
 }
 
 export interface NodeConstraints {

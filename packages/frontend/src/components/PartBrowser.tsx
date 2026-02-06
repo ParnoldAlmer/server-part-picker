@@ -191,6 +191,11 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
 
                     const isCompatible = motherboardCompatible && ipuCompatible;
 
+                    // Check for max DIMM constraint
+                    const currentDimmCount = node.memory.length;
+                    const maxDimms = build.chassis?.constraints.maxDimmsPerNode;
+                    const slotsFull = maxDimms !== undefined && currentDimmCount >= maxDimms;
+
                     return (
                         <div
                             key={mem.id}
@@ -220,6 +225,11 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                             )}
                                         </div>
                                     )}
+                                    {isCompatible && slotsFull && (
+                                        <p className="mt-2 text-xs text-amber-500">
+                                            ⚠️ DIMM slots full ({currentDimmCount}/{maxDimms})
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     {mem.msrp && (
@@ -229,15 +239,15 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     )}
                                     <button
                                         onClick={() => handleAddMemory(mem)}
-                                        disabled={!isCompatible}
+                                        disabled={!isCompatible || slotsFull}
                                         className={cn(
                                             "px-3 py-1 rounded text-sm",
-                                            isCompatible
-                                                ? "bg-blue-600 hover:bg-blue-700"
-                                                : "bg-slate-700 cursor-not-allowed"
+                                            !isCompatible || slotsFull
+                                                ? "bg-slate-700 cursor-not-allowed"
+                                                : "bg-blue-600 hover:bg-blue-700"
                                         )}
                                     >
-                                        Add
+                                        {slotsFull && isCompatible ? 'Full' : 'Add'}
                                     </button>
                                 </div>
                             </div>

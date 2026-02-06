@@ -22,6 +22,7 @@ interface ChassisFormState {
     formFactor: FormFactor;
     nodeCount: number;
     psuWatts: number;
+    maxDimmsPerNode?: number;
     bayGroups: BayGroupInput[];
 }
 
@@ -148,7 +149,8 @@ export function ChassisSelector() {
                     maxWatts: formState.psuWatts,
                     count: 2,
                     redundancy: true
-                }
+                },
+                maxDimmsPerNode: formState.maxDimmsPerNode
             }
         };
 
@@ -175,6 +177,7 @@ export function ChassisSelector() {
             formFactor: chassis.formFactor,
             nodeCount: chassis.constraints.nodes.length,
             psuWatts: chassis.constraints.psu.maxWatts,
+            maxDimmsPerNode: chassis.constraints.maxDimmsPerNode,
             bayGroups: chassis.constraints.bays.map(b => ({
                 count: b.count,
                 formFactor: b.formFactor,
@@ -308,14 +311,34 @@ export function ChassisSelector() {
                             {errors.nodeCount && <span className="text-xs text-red-500">{errors.nodeCount}</span>}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm text-slate-400">PSU Max Watts</label>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                                PSU Max Watts
+                            </label>
                             <input
                                 type="number"
-                                min={0}
                                 value={formState.psuWatts}
                                 onChange={e => setFormState({ ...formState, psuWatts: parseInt(e.target.value) || 0 })}
                                 className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2"
+                                placeholder="0"
                             />
+                            {errors.psuWatts && <p className="text-sm text-red-500 mt-1">{errors.psuWatts}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                                Max DIMMs/Node
+                            </label>
+                            <input
+                                type="number"
+                                min={1}
+                                value={formState.maxDimmsPerNode ?? ''}
+                                onChange={e => {
+                                    const val = e.target.value === '' ? undefined : parseInt(e.target.value);
+                                    setFormState({ ...formState, maxDimmsPerNode: val });
+                                }}
+                                className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2"
+                                placeholder="No Limit"
+                            />
+                            {errors.maxDimmsPerNode && <p className="text-sm text-red-500 mt-1">{errors.maxDimmsPerNode}</p>}
                         </div>
                     </div>
 
