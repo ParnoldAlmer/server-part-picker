@@ -178,10 +178,18 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
 
                 {/* Memory */}
                 {!loading && selectedType === 'memory' && memory.map((mem) => {
-                    const isCompatible = !node.motherboard || (
+                    const motherboardCompatible = !node.motherboard || (
                         node.motherboard.constraints.memory.ddrGen === mem.constraints.ddrGen &&
                         node.motherboard.constraints.memory.dimmTypes.includes(mem.constraints.type)
                     );
+
+                    // Check if *any* of the selected CPUs support this memory generation
+                    // If no CPUs are selected, we don't block based on CPU
+                    const ipuCompatible = node.cpus.length === 0 || node.cpus.some(cpu =>
+                        cpu.constraints.memGenSupported.includes(mem.constraints.ddrGen)
+                    );
+
+                    const isCompatible = motherboardCompatible && ipuCompatible;
 
                     return (
                         <div
@@ -202,10 +210,15 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                         <span className="text-slate-400">{mem.constraints.type}</span>
                                         <span className="text-slate-400">{mem.constraints.speedMT} MT/s</span>
                                     </div>
-                                    {!isCompatible && node.motherboard && (
-                                        <p className="mt-2 text-xs text-red-400">
-                                            ⚠️ Incompatible (needs DDR{node.motherboard.constraints.memory.ddrGen} {node.motherboard.constraints.memory.dimmTypes.join('/')})
-                                        </p>
+                                    {!isCompatible && (
+                                        <div className="mt-2 text-xs text-red-400 space-y-1">
+                                            {!motherboardCompatible && node.motherboard && (
+                                                <p>⚠️ Incompatible with motherboard (needs DDR{node.motherboard.constraints.memory.ddrGen} {node.motherboard.constraints.memory.dimmTypes.join('/')})</p>
+                                            )}
+                                            {!ipuCompatible && node.cpus.length > 0 && (
+                                                <p>⚠️ Incompatible with CPU (needs DDR{node.cpus[0].constraints.memGenSupported.join('/')})</p>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex flex-col items-end gap-2">

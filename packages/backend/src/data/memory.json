@@ -100,5 +100,124 @@
         "msrp": 1850,
         "currency": "USD",
         "lastUpdated": "2026-02-04"
+    },
+    {
+        "id": "mem-samsung-m393a8g40ab2-cwe",
+        "sku": "M393A8G40AB2-CWE",
+        "vendor": "Samsung",
+        "name": "64GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 64,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 280,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "mem-micron-mta36asf4g72pz-3g2e1",
+        "sku": "MTA36ASF4G72PZ-3G2E1",
+        "vendor": "Micron",
+        "name": "32GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 32,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 140,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "mem-skhynix-hmaa8gr7ajr4n-xn",
+        "sku": "HMAA8GR7AJR4N-XN",
+        "vendor": "SK Hynix",
+        "name": "64GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 64,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 270,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "mem-samsung-m393a4k40db3-cwe",
+        "sku": "M393A4K40DB3-CWE",
+        "vendor": "Samsung",
+        "name": "32GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 32,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 135,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "mem-micron-mta18asf2g72pdz-3g2r1",
+        "sku": "MTA18ASF2G72PDZ-3G2R1",
+        "vendor": "Micron",
+        "name": "16GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 16,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 70,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "mem-skhynix-hmaa4gr7ajr8n-xn",
+        "sku": "HMAA4GR7AJR8N-XN",
+        "vendor": "SK Hynix",
+        "name": "32GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 32,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 145,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "mem-samsung-m393a2k40db3-cwe",
+        "sku": "M393A2K40DB3-CWE",
+        "vendor": "Samsung",
+        "name": "16GB DDR4 RDIMM",
+        "constraints": {
+            "ddrGen": 4,
+            "type": "RDIMM",
+            "speedMT": 3200,
+            "capacityGB": 16,
+            "ranks": 2,
+            "voltage": 1.2
+        },
+        "msrp": 65,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
     }
 ]
