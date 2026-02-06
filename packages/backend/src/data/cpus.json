@@ -145,7 +145,7 @@
     },
     {
         "id": "cpu-ampere-m128-30",
-        "sku": "M128-30",
+        "sku": "AC-212825002",
         "vendor": "Ampere",
         "name": "Altra Max M128-30",
         "family": "Altra Max",
@@ -159,41 +159,139 @@
                 4,
                 5
             ],
-            "tdpW": 250,
+            "tdpW": 183,
             "maxMemSpeedMT": 3200,
             "lanes": 128
         },
         "msrp": 4500,
         "currency": "USD",
-        "lastUpdated": "2026-02-04"
+        "lastUpdated": "2026-02-06"
     },
     {
-        "id": "cpu-ampere-a192-32x",
-        "sku": "A192-32X",
+        "id": "cpu-ampere-m128-28",
+        "sku": "AC-212823002",
         "vendor": "Ampere",
-        "name": "AmpereOne A192-32X",
-        "family": "AmpereOne",
+        "name": "Altra Max M128-28",
+        "family": "Altra Max",
         "platform": "Ampere",
-        "cores": 192,
-        "threads": 192,
-        "baseClock": 3.2,
+        "cores": 128,
+        "threads": 128,
+        "baseClock": 2.8,
         "constraints": {
             "socket": "LGA4926",
             "memGenSupported": [
+                4,
                 5
             ],
-            "tdpW": 350,
-            "maxMemSpeedMT": 4800,
+            "tdpW": 154,
+            "maxMemSpeedMT": 3200,
             "lanes": 128
         },
+        "msrp": 4200,
         "currency": "USD",
-        "lastUpdated": "2026-02-04"
+        "lastUpdated": "2026-02-06"
     },
     {
-        "id": "cpu-ampere-m80-28",
-        "sku": "M80-28",
+        "id": "cpu-ampere-m128-26",
+        "sku": "AC-212819002",
         "vendor": "Ampere",
-        "name": "Altra M80-28",
+        "name": "Altra Max M128-26",
+        "family": "Altra Max",
+        "platform": "Ampere",
+        "cores": 128,
+        "threads": 128,
+        "baseClock": 2.6,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 133,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 3900,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-m96-30",
+        "sku": "AC-209622002",
+        "vendor": "Ampere",
+        "name": "Altra Max M96-30",
+        "family": "Altra Max",
+        "platform": "Ampere",
+        "cores": 96,
+        "threads": 96,
+        "baseClock": 3.0,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 157,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 3800,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-m96-28",
+        "sku": "AC-209619002",
+        "vendor": "Ampere",
+        "name": "Altra Max M96-28",
+        "family": "Altra Max",
+        "platform": "Ampere",
+        "cores": 96,
+        "threads": 96,
+        "baseClock": 2.8,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 132,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 3500,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q80-30",
+        "sku": "AC-108021002",
+        "vendor": "Ampere",
+        "name": "Altra Q80-30",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 80,
+        "threads": 80,
+        "baseClock": 3.0,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 161,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 3200,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q80-28",
+        "sku": "AC-108018502",
+        "vendor": "Ampere",
+        "name": "Altra Q80-28",
         "family": "Altra",
         "platform": "Ampere",
         "cores": 80,
@@ -205,12 +303,132 @@
                 4,
                 5
             ],
-            "tdpW": 210,
+            "tdpW": 124,
             "maxMemSpeedMT": 3200,
             "lanes": 128
         },
-        "msrp": 3200,
+        "msrp": 2900,
         "currency": "USD",
-        "lastUpdated": "2026-02-04"
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q80-26",
+        "sku": "AC-108015002",
+        "vendor": "Ampere",
+        "name": "Altra Q80-26",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 80,
+        "threads": 80,
+        "baseClock": 2.6,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 113,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 2600,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q64-30",
+        "sku": "AC-106418002",
+        "vendor": "Ampere",
+        "name": "Altra Q64-30",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 64,
+        "threads": 64,
+        "baseClock": 3.0,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 124,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 2400,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q64-26",
+        "sku": "AC-106412502",
+        "vendor": "Ampere",
+        "name": "Altra Q64-26",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 64,
+        "threads": 64,
+        "baseClock": 2.6,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 87,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 2100,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q64-22",
+        "sku": "AC-106409502",
+        "vendor": "Ampere",
+        "name": "Altra Q64-22",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 64,
+        "threads": 64,
+        "baseClock": 2.2,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 69,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 1800,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
+    },
+    {
+        "id": "cpu-ampere-q32-17",
+        "sku": "AC-103206502",
+        "vendor": "Ampere",
+        "name": "Altra Q32-17",
+        "family": "Altra",
+        "platform": "Ampere",
+        "cores": 32,
+        "threads": 32,
+        "baseClock": 1.7,
+        "constraints": {
+            "socket": "LGA4926",
+            "memGenSupported": [
+                4,
+                5
+            ],
+            "tdpW": 40,
+            "maxMemSpeedMT": 3200,
+            "lanes": 128
+        },
+        "msrp": 1200,
+        "currency": "USD",
+        "lastUpdated": "2026-02-06"
     }
 ]
