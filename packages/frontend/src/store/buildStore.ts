@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { Build, Chassis, Node, Motherboard, CPU, Memory, Storage } from '../types/hardware';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -75,7 +76,7 @@ const createDefaultNodeTarget = (): NodePlanningTarget => ({
 const createTargetsForNodes = (nodes: Node[]): Record<number, NodePlanningTarget> =>
     Object.fromEntries(nodes.map((node) => [node.index, createDefaultNodeTarget()]));
 
-export const useBuildStore = create<BuildStore>((set) => ({
+export const useBuildStore = create<BuildStore>()(persist((set) => ({
     build: createEmptyBuild(),
     priceOverrides: {},
     nodeTargets: {},
@@ -246,5 +247,19 @@ export const useBuildStore = create<BuildStore>((set) => ({
 
     resetBuild: () => set({ build: createEmptyBuild(), priceOverrides: {}, nodeTargets: {}, customCosts: [] }),
 
-    loadBuild: (build) => set({ build, nodeTargets: createTargetsForNodes(build.nodes) }),
+    loadBuild: (build) => set({
+        build,
+        nodeTargets: createTargetsForNodes(build.nodes),
+        priceOverrides: {},
+        customCosts: [],
+    }),
+}), {
+    name: 'server-part-picker-build-v1',
+    storage: createJSONStorage(() => localStorage),
+    partialize: (state) => ({
+        build: state.build,
+        priceOverrides: state.priceOverrides,
+        nodeTargets: state.nodeTargets,
+        customCosts: state.customCosts,
+    }),
 }));
