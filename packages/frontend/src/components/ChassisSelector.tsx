@@ -5,13 +5,14 @@ import { useBuildStore } from '../store/buildStore';
 import chassisData from '../../../backend/src/data/chassis.json';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { v4 as uuidv4 } from 'uuid';
-import { Trash2, Plus, RotateCcw, AlertTriangle, X } from 'lucide-react';
+import { Trash2, Plus, RotateCcw, AlertTriangle, X, Pencil } from 'lucide-react';
 
 interface BayGroupInput {
     count: number;
     formFactor: BayFormFactor;
     interface: BayInterface;
     hotSwap: boolean;
+    perNode: boolean;
 }
 
 interface ChassisFormState {
@@ -46,6 +47,7 @@ export function ChassisSelector() {
 
     // Local UI State
     const [isAdding, setIsAdding] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [formState, setFormState] = useState<ChassisFormState>(INITIAL_FORM_STATE);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [undoState, setUndoState] = useState<{ id: string, type: 'default' | 'custom', chassis?: Chassis } | null>(null);
@@ -106,8 +108,9 @@ export function ChassisSelector() {
         if (formState.nodeCount < 1) newErrors.nodeCount = "Must have at least 1 node";
         if (formState.psuWatts < 0) newErrors.psuWatts = "Watts cannot be negative";
 
-        // Check duplicates
+        // Check duplicates (exclude the chassis being edited)
         const isDuplicate = visibleChassis.some(c =>
+            c.id !== editingId &&
             c.vendor.toLowerCase() === formState.vendor.toLowerCase() &&
             c.name.toLowerCase() === formState.name.toLowerCase() &&
             c.formFactor === formState.formFactor
@@ -121,8 +124,8 @@ export function ChassisSelector() {
     const handleAddChassis = () => {
         if (!validateForm()) return;
 
-        const newChassis: Chassis = {
-            id: `custom_${uuidv4()}`,
+        const chassisData: Chassis = {
+            id: editingId || `custom_${uuidv4()}`,
             vendor: formState.vendor,
             name: formState.name,
             sku: formState.sku || 'Custom',
@@ -139,7 +142,7 @@ export function ChassisSelector() {
                     formFactor: g.formFactor,
                     interface: g.interface,
                     hotSwap: g.hotSwap,
-                    perNode: false // Simplify for custom: shared bays
+                    perNode: g.perNode
                 })),
                 psu: {
                     maxWatts: formState.psuWatts,
@@ -149,8 +152,44 @@ export function ChassisSelector() {
             }
         };
 
-        setCustomChassis(prev => [...prev, newChassis]);
+        if (editingId) {
+            // Update existing
+            setCustomChassis(prev => prev.map(c => c.id === editingId ? chassisData : c));
+        } else {
+            // Add new
+            setCustomChassis(prev => [...prev, chassisData]);
+        }
+
         setIsAdding(false);
+        setEditingId(null);
+        setFormState(INITIAL_FORM_STATE);
+        setErrors({});
+    };
+
+    const handleEdit = (chassis: Chassis) => {
+        setEditingId(chassis.id);
+        setFormState({
+            vendor: chassis.vendor,
+            name: chassis.name,
+            sku: chassis.sku,
+            formFactor: chassis.formFactor,
+            nodeCount: chassis.constraints.nodes.length,
+            psuWatts: chassis.constraints.psu.maxWatts,
+            bayGroups: chassis.constraints.bays.map(b => ({
+                count: b.count,
+                formFactor: b.formFactor,
+                interface: b.interface,
+                hotSwap: b.hotSwap,
+                perNode: b.perNode ?? false
+            }))
+        });
+        setIsAdding(true);
+        setErrors({});
+    };
+
+    const handleCancelForm = () => {
+        setIsAdding(false);
+        setEditingId(null);
         setFormState(INITIAL_FORM_STATE);
         setErrors({});
     };
@@ -158,7 +197,7 @@ export function ChassisSelector() {
     const addBayGroup = () => {
         setFormState(prev => ({
             ...prev,
-            bayGroups: [...prev.bayGroups, { count: 0, formFactor: '2.5"', interface: 'NVMe', hotSwap: true }]
+            bayGroups: [...prev.bayGroups, { count: 0, formFactor: '2.5"', interface: 'NVMe', hotSwap: true, perNode: false }]
         }));
     };
 
@@ -173,7 +212,11 @@ export function ChassisSelector() {
                 </div>
                 {!isAdding && (
                     <button
-                        onClick={() => setIsAdding(true)}
+                        onClick={() => {
+                            setIsAdding(true);
+                            setEditingId(null);
+                            setFormState(INITIAL_FORM_STATE);
+                        }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
                     >
                         <Plus size={16} />
@@ -199,8 +242,8 @@ export function ChassisSelector() {
             {isAdding && (
                 <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
                     <div className="flex justify-between items-center border-b border-slate-700 pb-4">
-                        <h3 className="text-xl font-semibold">New Custom Chassis</h3>
-                        <button onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-white">
+                        <h3 className="text-xl font-semibold">{editingId ? 'Edit Chassis' : 'New Custom Chassis'}</h3>
+                        <button onClick={handleCancelForm} className="text-slate-400 hover:text-white">
                             <X size={20} />
                         </button>
                     </div>
@@ -333,6 +376,20 @@ export function ChassisSelector() {
                                         {BAY_INTERFACES.map(i => <option key={i} value={i}>{i}</option>)}
                                     </select>
                                 </div>
+                                <div className="flex items-center gap-2 px-3">
+                                    <input
+                                        type="checkbox"
+                                        id={`perNode-${idx}`}
+                                        checked={group.perNode}
+                                        onChange={e => {
+                                            const newGroups = [...formState.bayGroups];
+                                            newGroups[idx].perNode = e.target.checked;
+                                            setFormState({ ...formState, bayGroups: newGroups });
+                                        }}
+                                        className="w-4 h-4 bg-slate-800 border border-slate-700 rounded"
+                                    />
+                                    <label htmlFor={`perNode-${idx}`} className="text-xs text-slate-400 whitespace-nowrap">Per Node</label>
+                                </div>
                                 <button
                                     onClick={() => {
                                         const newGroups = formState.bayGroups.filter((_, i) => i !== idx);
@@ -348,7 +405,7 @@ export function ChassisSelector() {
 
                     <div className="flex justify-end gap-3 border-t border-slate-700 pt-4">
                         <button
-                            onClick={() => setIsAdding(false)}
+                            onClick={handleCancelForm}
                             className="px-4 py-2 hover:bg-slate-700 rounded"
                         >
                             Cancel
@@ -357,7 +414,7 @@ export function ChassisSelector() {
                             onClick={handleAddChassis}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
                         >
-                            Save Chassis
+                            {editingId ? 'Update Chassis' : 'Save Chassis'}
                         </button>
                     </div>
                 </div>
@@ -430,17 +487,31 @@ export function ChassisSelector() {
                                 </div>
                             </button>
 
-                            {/* Remove Button (Hover only) */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemove(c.id, isCustom);
-                                }}
-                                className="absolute top-2 right-2 p-2 opacity-0 group-hover:opacity-100 bg-slate-900/80 hover:bg-red-900/80 text-slate-400 hover:text-red-200 rounded transition-all"
-                                title={isCustom ? "Delete Custom Chassis" : "Hide Default Chassis"}
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            {/* Action Buttons (Hover only) */}
+                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                {isCustom && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEdit(c);
+                                        }}
+                                        className="p-2 bg-slate-900/80 hover:bg-blue-900/80 text-slate-400 hover:text-blue-200 rounded transition-all"
+                                        title="Edit Custom Chassis"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemove(c.id, isCustom);
+                                    }}
+                                    className="p-2 bg-slate-900/80 hover:bg-red-900/80 text-slate-400 hover:text-red-200 rounded transition-all"
+                                    title={isCustom ? "Delete Custom Chassis" : "Hide Default Chassis"}
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         </div>
                     );
                 })}
