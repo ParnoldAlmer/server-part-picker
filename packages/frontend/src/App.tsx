@@ -12,7 +12,7 @@ function App() {
       <header className="border-b border-slate-700 bg-slate-800">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold">ServerSpec</h1>
-          <p className="text-slate-400 mt-1">Enterprise Server Configurator</p>
+          <p className="text-slate-400 mt-1">Server Build Planner (PCPartPicker-style workflow)</p>
         </div>
       </header>
 

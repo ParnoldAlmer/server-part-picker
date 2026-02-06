@@ -2,8 +2,27 @@ import { create } from 'zustand';
 import type { Build, Chassis, Node, Motherboard, CPU, Memory, Storage } from '../types/hardware';
 import { v4 as uuidv4 } from 'uuid';
 
+export interface NodePlanningTarget {
+    cores: number;
+    memoryGB: number;
+    storageTB: number;
+}
+
+export type PlannerCostCategory = 'Network' | 'Accessories' | 'Service' | 'Other';
+
+export interface CustomCostItem {
+    id: string;
+    label: string;
+    category: PlannerCostCategory;
+    quantity: number;
+    unitPrice: number;
+}
+
 interface BuildStore {
     build: Build;
+    priceOverrides: Record<string, number>;
+    nodeTargets: Record<number, NodePlanningTarget>;
+    customCosts: CustomCostItem[];
 
     // Chassis actions
     setChassis: (chassis: Chassis) => void;
@@ -16,6 +35,13 @@ interface BuildStore {
     removeNodeMemory: (nodeIndex: number, memoryIndex: number) => void;
     addNodeStorage: (nodeIndex: number, storage: Storage) => void;
     removeNodeStorage: (nodeIndex: number, storageIndex: number) => void;
+
+    // Planner actions
+    setPriceOverride: (itemKey: string, price?: number) => void;
+    setNodeTarget: (nodeIndex: number, target: Partial<NodePlanningTarget>) => void;
+    addCustomCostItem: () => void;
+    updateCustomCostItem: (id: string, patch: Partial<Omit<CustomCostItem, 'id'>>) => void;
+    removeCustomCostItem: (id: string) => void;
 
     // Build management
     resetBuild: () => void;
@@ -40,13 +66,31 @@ const createEmptyNode = (index: number): Node => ({
     storage: [],
 });
 
+const createDefaultNodeTarget = (): NodePlanningTarget => ({
+    cores: 0,
+    memoryGB: 0,
+    storageTB: 0,
+});
+
+const createTargetsForNodes = (nodes: Node[]): Record<number, NodePlanningTarget> =>
+    Object.fromEntries(nodes.map((node) => [node.index, createDefaultNodeTarget()]));
+
 export const useBuildStore = create<BuildStore>((set) => ({
     build: createEmptyBuild(),
+    priceOverrides: {},
+    nodeTargets: {},
+    customCosts: [],
 
     setChassis: (chassis) => set((state) => {
         // Initialize nodes based on chassis constraints
         const nodes: Node[] = chassis.constraints.nodes.map((nodeConfig) =>
             createEmptyNode(nodeConfig.index)
+        );
+        const nodeTargets = Object.fromEntries(
+            nodes.map((node) => [
+                node.index,
+                state.nodeTargets[node.index] ?? createDefaultNodeTarget(),
+            ])
         );
 
         return {
@@ -56,6 +100,7 @@ export const useBuildStore = create<BuildStore>((set) => ({
                 nodes,
                 updatedAt: new Date().toISOString(),
             },
+            nodeTargets,
         };
     }),
 
@@ -135,7 +180,71 @@ export const useBuildStore = create<BuildStore>((set) => ({
         },
     })),
 
-    resetBuild: () => set({ build: createEmptyBuild() }),
+    setPriceOverride: (itemKey, price) => set((state) => {
+        const nextOverrides = { ...state.priceOverrides };
+        if (price === undefined || Number.isNaN(price) || price < 0) {
+            delete nextOverrides[itemKey];
+        } else {
+            nextOverrides[itemKey] = price;
+        }
 
-    loadBuild: (build) => set({ build }),
+        return {
+            priceOverrides: nextOverrides,
+            build: {
+                ...state.build,
+                updatedAt: new Date().toISOString(),
+            },
+        };
+    }),
+
+    setNodeTarget: (nodeIndex, target) => set((state) => ({
+        nodeTargets: {
+            ...state.nodeTargets,
+            [nodeIndex]: {
+                ...(state.nodeTargets[nodeIndex] ?? createDefaultNodeTarget()),
+                ...target,
+            },
+        },
+        build: {
+            ...state.build,
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    addCustomCostItem: () => set((state) => ({
+        customCosts: [
+            ...state.customCosts,
+            {
+                id: `custom-cost-${uuidv4()}`,
+                label: 'Custom line item',
+                category: 'Other',
+                quantity: 1,
+                unitPrice: 0,
+            },
+        ],
+        build: {
+            ...state.build,
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    updateCustomCostItem: (id, patch) => set((state) => ({
+        customCosts: state.customCosts.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+        build: {
+            ...state.build,
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    removeCustomCostItem: (id) => set((state) => ({
+        customCosts: state.customCosts.filter((item) => item.id !== id),
+        build: {
+            ...state.build,
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    resetBuild: () => set({ build: createEmptyBuild(), priceOverrides: {}, nodeTargets: {}, customCosts: [] }),
+
+    loadBuild: (build) => set({ build, nodeTargets: createTargetsForNodes(build.nodes) }),
 }));

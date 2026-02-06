@@ -8,20 +8,48 @@ import {
     bayLimitRule,
     powerRule,
     nodeTopologyRule,
+    memorySlotRule,
 } from '../lib/validation';
 import { calculatePower } from '../lib/validation/rules/powerRule';
+import type { PlannerCostCategory } from '../store/buildStore';
+import { Plus, Trash2 } from 'lucide-react';
 
 const allRules = [
     socketRule,
     memoryTypeRule,
     memoryBalanceRule,
+    memorySlotRule,
     bayLimitRule,
     powerRule,
     nodeTopologyRule,
 ];
 
+const PART_CATEGORY_OPTIONS: PlannerCostCategory[] = ['Network', 'Accessories', 'Service', 'Other'];
+
+interface PlannerRow {
+    key: string;
+    category: string;
+    location: string;
+    item: string;
+    quantity: number;
+    defaultUnitPrice: number;
+    overrideKey?: string;
+}
+
+const getOverrideKey = (type: string, id: string): string => `${type}:${id}`;
+
 export function BuildSummary() {
-    const { build } = useBuildStore();
+    const {
+        build,
+        priceOverrides,
+        setPriceOverride,
+        nodeTargets,
+        setNodeTarget,
+        customCosts,
+        addCustomCostItem,
+        updateCustomCostItem,
+        removeCustomCostItem,
+    } = useBuildStore();
 
     if (!build.chassis) {
         return null;
@@ -30,17 +58,126 @@ export function BuildSummary() {
     const issues = runValidation(build, allRules);
     const { errors, warnings } = categorizeIssues(issues);
     const totalPower = calculatePower(build);
+    const plannerRows: PlannerRow[] = [];
 
-    // Calculate total price
-    const totalPrice = (build.chassis.msrp || 0) +
-        build.nodes.reduce((sum, node) => {
-            const nodeCost =
-                (node.motherboard?.msrp || 0) +
-                node.cpus.reduce((s, cpu) => s + (cpu.msrp || 0), 0) +
-                node.memory.reduce((s, mem) => s + (mem.msrp || 0), 0) +
-                node.storage.reduce((s, stg) => s + (stg.msrp || 0), 0);
-            return sum + nodeCost;
-        }, 0);
+    plannerRows.push({
+        key: `chassis-${build.chassis.id}`,
+        category: 'Chassis',
+        location: 'Global',
+        item: `${build.chassis.vendor} ${build.chassis.name}`,
+        quantity: 1,
+        defaultUnitPrice: build.chassis.msrp || 0,
+        overrideKey: getOverrideKey('chassis', build.chassis.id),
+    });
+
+    build.nodes.forEach((node, nodeIdx) => {
+        if (node.motherboard) {
+            plannerRows.push({
+                key: `mobo-${nodeIdx}-${node.motherboard.id}`,
+                category: 'Motherboard',
+                location: `Node ${nodeIdx + 1}`,
+                item: `${node.motherboard.vendor} ${node.motherboard.name}`,
+                quantity: 1,
+                defaultUnitPrice: node.motherboard.msrp || 0,
+                overrideKey: getOverrideKey('motherboard', node.motherboard.id),
+            });
+        }
+
+        const cpuGroups = Object.values(
+            node.cpus.reduce<Record<string, { id: string; item: string; qty: number; msrp: number }>>((acc, cpu) => {
+                if (!acc[cpu.id]) {
+                    acc[cpu.id] = {
+                        id: cpu.id,
+                        item: `${cpu.vendor} ${cpu.name}`,
+                        qty: 0,
+                        msrp: cpu.msrp || 0,
+                    };
+                }
+                acc[cpu.id].qty += 1;
+                return acc;
+            }, {})
+        );
+
+        const memoryGroups = Object.values(
+            node.memory.reduce<Record<string, { id: string; item: string; qty: number; msrp: number }>>((acc, dimm) => {
+                if (!acc[dimm.id]) {
+                    acc[dimm.id] = {
+                        id: dimm.id,
+                        item: `${dimm.vendor} ${dimm.name}`,
+                        qty: 0,
+                        msrp: dimm.msrp || 0,
+                    };
+                }
+                acc[dimm.id].qty += 1;
+                return acc;
+            }, {})
+        );
+
+        const storageGroups = Object.values(
+            node.storage.reduce<Record<string, { id: string; item: string; qty: number; msrp: number }>>((acc, drive) => {
+                if (!acc[drive.id]) {
+                    acc[drive.id] = {
+                        id: drive.id,
+                        item: `${drive.vendor} ${drive.name}`,
+                        qty: 0,
+                        msrp: drive.msrp || 0,
+                    };
+                }
+                acc[drive.id].qty += 1;
+                return acc;
+            }, {})
+        );
+
+        cpuGroups.forEach((group) => {
+            plannerRows.push({
+                key: `cpu-${nodeIdx}-${group.id}`,
+                category: 'CPU',
+                location: `Node ${nodeIdx + 1}`,
+                item: group.item,
+                quantity: group.qty,
+                defaultUnitPrice: group.msrp,
+                overrideKey: getOverrideKey('cpu', group.id),
+            });
+        });
+
+        memoryGroups.forEach((group) => {
+            plannerRows.push({
+                key: `memory-${nodeIdx}-${group.id}`,
+                category: 'Memory',
+                location: `Node ${nodeIdx + 1}`,
+                item: group.item,
+                quantity: group.qty,
+                defaultUnitPrice: group.msrp,
+                overrideKey: getOverrideKey('memory', group.id),
+            });
+        });
+
+        storageGroups.forEach((group) => {
+            plannerRows.push({
+                key: `storage-${nodeIdx}-${group.id}`,
+                category: 'Storage',
+                location: `Node ${nodeIdx + 1}`,
+                item: group.item,
+                quantity: group.qty,
+                defaultUnitPrice: group.msrp,
+                overrideKey: getOverrideKey('storage', group.id),
+            });
+        });
+    });
+
+    const hardwareTotal = plannerRows.reduce((sum, row) => {
+        const unitPrice = row.overrideKey !== undefined && priceOverrides[row.overrideKey] !== undefined
+            ? priceOverrides[row.overrideKey]
+            : row.defaultUnitPrice;
+        return sum + unitPrice * row.quantity;
+    }, 0);
+    const customTotal = customCosts.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    const totalPrice = hardwareTotal + customTotal;
+    const nodeActuals = build.nodes.map((node) => ({
+        cores: node.cpus.reduce((sum, cpu) => sum + cpu.cores, 0),
+        memoryGB: node.memory.reduce((sum, dimm) => sum + dimm.constraints.capacityGB, 0),
+        storageTB: Number(node.storage.reduce((sum, drive) => sum + drive.constraints.capacityTB, 0).toFixed(2)),
+    }));
 
     return (
         <div className="sticky top-4 space-y-4">
@@ -105,12 +242,18 @@ export function BuildSummary() {
                             </span>
                         </div>
                     )}
-                    {totalPrice > 0 && (
-                        <div className="flex justify-between text-blue-400 font-semibold">
-                            <span>Total Price:</span>
-                            <span>${totalPrice.toLocaleString()}</span>
-                        </div>
-                    )}
+                    <div className="flex justify-between">
+                        <span className="text-slate-400">Hardware Total:</span>
+                        <span className="font-medium">${hardwareTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-slate-400">Custom Costs:</span>
+                        <span className="font-medium">${customTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-blue-400 font-semibold">
+                        <span>Grand Total:</span>
+                        <span>${totalPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                    </div>
                 </div>
 
                 {/* Validation Issues */}
@@ -142,6 +285,202 @@ export function BuildSummary() {
                         )}
                     </div>
                 )}
+            </div>
+
+            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Planner BOM</h3>
+                    <span className="text-xs text-slate-400">Edit unit prices to match vendor quotes</span>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-slate-400 border-b border-slate-700">
+                                <th className="py-2 pr-2">Category</th>
+                                <th className="py-2 pr-2">Location</th>
+                                <th className="py-2 pr-2">Part</th>
+                                <th className="py-2 pr-2">Qty</th>
+                                <th className="py-2 pr-2">Unit</th>
+                                <th className="py-2">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {plannerRows.map((row) => {
+                                const overrideKey = row.overrideKey;
+                                const overrideValue = overrideKey ? priceOverrides[overrideKey] : undefined;
+                                const unitPrice = overrideValue ?? row.defaultUnitPrice;
+                                const subtotal = unitPrice * row.quantity;
+
+                                return (
+                                    <tr key={row.key} className="border-b border-slate-700/70">
+                                        <td className="py-2 pr-2 text-slate-300">{row.category}</td>
+                                        <td className="py-2 pr-2 text-slate-400">{row.location}</td>
+                                        <td className="py-2 pr-2">
+                                            <div className="text-slate-200">{row.item}</div>
+                                        </td>
+                                        <td className="py-2 pr-2">{row.quantity}</td>
+                                        <td className="py-2 pr-2">
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step="0.01"
+                                                    value={unitPrice}
+                                                    onChange={(event) => {
+                                                        const nextValue = event.target.value === '' ? undefined : Number(event.target.value);
+                                                        if (overrideKey) {
+                                                            setPriceOverride(overrideKey, nextValue);
+                                                        }
+                                                    }}
+                                                    className="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                                                />
+                                                {overrideValue !== undefined && overrideKey && (
+                                                    <button
+                                                        onClick={() => setPriceOverride(overrideKey, undefined)}
+                                                        className="text-xs text-slate-400 hover:text-slate-200"
+                                                    >
+                                                        MSRP
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="py-2 font-medium text-slate-200">
+                                            ${subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Custom Cost Lines</h3>
+                    <button
+                        onClick={() => addCustomCostItem()}
+                        className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                    >
+                        <Plus size={14} />
+                        Add
+                    </button>
+                </div>
+                {customCosts.length === 0 && (
+                    <p className="text-sm text-slate-400">No custom lines yet. Add network cards, services, shipping, or misc parts.</p>
+                )}
+                {customCosts.map((item) => (
+                    <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
+                        <input
+                            value={item.label}
+                            onChange={(event) => updateCustomCostItem(item.id, { label: event.target.value })}
+                            className="col-span-4 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                            placeholder="Line item"
+                        />
+                        <select
+                            value={item.category}
+                            onChange={(event) => updateCustomCostItem(item.id, { category: event.target.value as PlannerCostCategory })}
+                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        >
+                            {PART_CATEGORY_OPTIONS.map((category) => (
+                                <option key={category} value={category}>
+                                    {category}
+                                </option>
+                            ))}
+                        </select>
+                        <input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(event) => updateCustomCostItem(item.id, { quantity: Math.max(1, Number(event.target.value) || 1) })}
+                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        />
+                        <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={item.unitPrice}
+                            onChange={(event) => updateCustomCostItem(item.id, { unitPrice: Math.max(0, Number(event.target.value) || 0) })}
+                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        />
+                        <div className="col-span-1 text-right text-sm font-medium">
+                            ${(item.quantity * item.unitPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </div>
+                        <button
+                            onClick={() => removeCustomCostItem(item.id)}
+                            className="col-span-1 flex items-center justify-center text-red-400 hover:text-red-300"
+                            aria-label={`remove-${item.id}`}
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
+                <h3 className="text-lg font-semibold">Node Targets</h3>
+                <p className="text-sm text-slate-400">Set target specs per node to compare planned vs selected hardware.</p>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-left text-slate-400 border-b border-slate-700">
+                                <th className="py-2 pr-2">Node</th>
+                                <th className="py-2 pr-2">Target Cores</th>
+                                <th className="py-2 pr-2">Actual Cores</th>
+                                <th className="py-2 pr-2">Target RAM (GB)</th>
+                                <th className="py-2 pr-2">Actual RAM (GB)</th>
+                                <th className="py-2 pr-2">Target Storage (TB)</th>
+                                <th className="py-2">Actual Storage (TB)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {build.nodes.map((node, idx) => {
+                                const target = nodeTargets[node.index] ?? { cores: 0, memoryGB: 0, storageTB: 0 };
+                                const actual = nodeActuals[idx];
+                                const coreGap = target.cores > 0 && actual.cores < target.cores;
+                                const ramGap = target.memoryGB > 0 && actual.memoryGB < target.memoryGB;
+                                const storageGap = target.storageTB > 0 && actual.storageTB < target.storageTB;
+
+                                return (
+                                    <tr key={node.index} className="border-b border-slate-700/70">
+                                        <td className="py-2 pr-2">Node {idx + 1}</td>
+                                        <td className="py-2 pr-2">
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={target.cores}
+                                                onChange={(event) => setNodeTarget(node.index, { cores: Math.max(0, Number(event.target.value) || 0) })}
+                                                className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                                            />
+                                        </td>
+                                        <td className={`py-2 pr-2 font-medium ${coreGap ? 'text-red-400' : 'text-green-400'}`}>{actual.cores}</td>
+                                        <td className="py-2 pr-2">
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={target.memoryGB}
+                                                onChange={(event) => setNodeTarget(node.index, { memoryGB: Math.max(0, Number(event.target.value) || 0) })}
+                                                className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                                            />
+                                        </td>
+                                        <td className={`py-2 pr-2 font-medium ${ramGap ? 'text-red-400' : 'text-green-400'}`}>{actual.memoryGB}</td>
+                                        <td className="py-2 pr-2">
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                step="0.1"
+                                                value={target.storageTB}
+                                                onChange={(event) => setNodeTarget(node.index, { storageTB: Math.max(0, Number(event.target.value) || 0) })}
+                                                className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                                            />
+                                        </td>
+                                        <td className={`py-2 font-medium ${storageGap ? 'text-red-400' : 'text-green-400'}`}>{actual.storageTB}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
