@@ -76,6 +76,28 @@ const createDefaultNodeTarget = (): NodePlanningTarget => ({
 const createTargetsForNodes = (nodes: Node[]): Record<number, NodePlanningTarget> =>
     Object.fromEntries(nodes.map((node) => [node.index, createDefaultNodeTarget()]));
 
+const normalizeNodeTargets = (
+    nodes: Node[],
+    rawTargets: unknown
+): Record<number, NodePlanningTarget> => {
+    const candidate = (rawTargets ?? {}) as Record<string, Partial<NodePlanningTarget> | undefined>;
+
+    return Object.fromEntries(
+        nodes.map((node) => {
+            const key = String(node.index);
+            const raw = candidate[key] ?? {};
+            return [
+                node.index,
+                {
+                    cores: Math.max(0, Number(raw?.cores) || 0),
+                    memoryGB: Math.max(0, Number(raw?.memoryGB) || 0),
+                    storageTB: Math.max(0, Number(raw?.storageTB) || 0),
+                },
+            ];
+        })
+    );
+};
+
 export const useBuildStore = create<BuildStore>()(persist((set) => ({
     build: createEmptyBuild(),
     priceOverrides: {},
@@ -255,7 +277,39 @@ export const useBuildStore = create<BuildStore>()(persist((set) => ({
     }),
 }), {
     name: 'server-part-picker-build-v1',
+    version: 2,
     storage: createJSONStorage(() => localStorage),
+    migrate: (persistedState) => {
+        const state = persistedState as Partial<BuildStore> | undefined;
+        if (!state) return persistedState as BuildStore;
+
+        const build = state.build ?? createEmptyBuild();
+        const nodes = build.nodes ?? [];
+
+        return {
+            ...state,
+            build,
+            priceOverrides: state.priceOverrides ?? {},
+            customCosts: state.customCosts ?? [],
+            nodeTargets: normalizeNodeTargets(nodes, state.nodeTargets),
+        } as BuildStore;
+    },
+    merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<BuildStore> | undefined;
+        if (!persisted) return currentState;
+
+        const build = persisted.build ?? currentState.build;
+        const nodes = build.nodes ?? [];
+
+        return {
+            ...currentState,
+            ...persisted,
+            build,
+            priceOverrides: persisted.priceOverrides ?? currentState.priceOverrides,
+            customCosts: persisted.customCosts ?? currentState.customCosts,
+            nodeTargets: normalizeNodeTargets(nodes, persisted.nodeTargets),
+        };
+    },
     partialize: (state) => ({
         build: state.build,
         priceOverrides: state.priceOverrides,
