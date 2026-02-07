@@ -13,6 +13,7 @@ import {
 import { calculatePower } from '../lib/validation/rules/powerRule';
 import type { PlannerCostCategory } from '../store/buildStore';
 import { Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const allRules = [
     socketRule,
@@ -37,6 +38,72 @@ interface PlannerRow {
 }
 
 const getOverrideKey = (type: string, id: string): string => `${type}:${id}`;
+
+interface DraftNumberInputProps {
+    value: number;
+    min?: number;
+    step?: number | string;
+    className: string;
+    onCommit: (value: number) => void;
+}
+
+function DraftNumberInput({ value, min, step, className, onCommit }: DraftNumberInputProps) {
+    const [draft, setDraft] = useState(String(value));
+    const [isFocused, setIsFocused] = useState(false);
+
+    useEffect(() => {
+        if (!isFocused) {
+            setDraft(String(value));
+        }
+    }, [isFocused, value]);
+
+    const normalize = (raw: string): number => {
+        const parsed = Number(raw);
+        const fallback = min ?? 0;
+        if (raw === '' || Number.isNaN(parsed)) {
+            return fallback;
+        }
+        return min !== undefined ? Math.max(min, parsed) : parsed;
+    };
+
+    const commit = (raw: string) => {
+        const next = normalize(raw);
+        onCommit(next);
+        setDraft(String(next));
+    };
+
+    return (
+        <input
+            type="number"
+            min={min}
+            step={step}
+            value={draft}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => {
+                setIsFocused(false);
+                commit(draft);
+            }}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                    commit(draft);
+                }
+            }}
+            onChange={(event) => {
+                const next = event.target.value;
+                setDraft(next);
+                if (next === '' || next === '-' || next === '.' || next === '-.') {
+                    return;
+                }
+                const parsed = Number(next);
+                if (Number.isNaN(parsed)) {
+                    return;
+                }
+                onCommit(min !== undefined ? Math.max(min, parsed) : parsed);
+            }}
+            className={className}
+        />
+    );
+}
 
 export function BuildSummary() {
     const {
@@ -455,20 +522,18 @@ export function BuildSummary() {
                             ))}
                         </select>
                         <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Qty</div>
-                        <input
-                            type="number"
-                            min={1}
+                        <DraftNumberInput
                             value={item.quantity}
-                            onChange={(event) => updateCustomCostItem(item.id, { quantity: Math.max(1, Number(event.target.value) || 1) })}
+                            min={1}
+                            onCommit={(quantity) => updateCustomCostItem(item.id, { quantity })}
                             className="w-full min-w-0 bg-slate-950 md:bg-slate-900 border border-slate-700 rounded px-2 py-1"
                         />
                         <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Unit Price</div>
-                        <input
-                            type="number"
+                        <DraftNumberInput
+                            value={item.unitPrice}
                             min={0}
                             step="0.01"
-                            value={item.unitPrice}
-                            onChange={(event) => updateCustomCostItem(item.id, { unitPrice: Math.max(0, Number(event.target.value) || 0) })}
+                            onCommit={(unitPrice) => updateCustomCostItem(item.id, { unitPrice })}
                             className="w-full min-w-0 bg-slate-950 md:bg-slate-900 border border-slate-700 rounded px-2 py-1"
                         />
                         <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Subtotal</div>
@@ -507,11 +572,10 @@ export function BuildSummary() {
                                         <span className={`text-sm font-semibold ${coreGap ? 'text-red-400' : 'text-green-400'}`}>
                                             Actual: {actual.cores}
                                         </span>
-                                        <input
-                                            type="number"
-                                            min={0}
+                                        <DraftNumberInput
                                             value={target.cores}
-                                            onChange={(event) => setNodeTarget(node.index, { cores: Math.max(0, Number(event.target.value) || 0) })}
+                                            min={0}
+                                            onCommit={(cores) => setNodeTarget(node.index, { cores })}
                                             className="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
                                         />
                                     </div>
@@ -521,11 +585,10 @@ export function BuildSummary() {
                                         <span className={`text-sm font-semibold ${ramGap ? 'text-red-400' : 'text-green-400'}`}>
                                             Actual: {actual.memoryGB}
                                         </span>
-                                        <input
-                                            type="number"
-                                            min={0}
+                                        <DraftNumberInput
                                             value={target.memoryGB}
-                                            onChange={(event) => setNodeTarget(node.index, { memoryGB: Math.max(0, Number(event.target.value) || 0) })}
+                                            min={0}
+                                            onCommit={(memoryGB) => setNodeTarget(node.index, { memoryGB })}
                                             className="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
                                         />
                                     </div>
@@ -535,12 +598,11 @@ export function BuildSummary() {
                                         <span className={`text-sm font-semibold ${storageGap ? 'text-red-400' : 'text-green-400'}`}>
                                             Actual: {actual.storageTB}
                                         </span>
-                                        <input
-                                            type="number"
+                                        <DraftNumberInput
+                                            value={target.storageTB}
                                             min={0}
                                             step="0.1"
-                                            value={target.storageTB}
-                                            onChange={(event) => setNodeTarget(node.index, { storageTB: Math.max(0, Number(event.target.value) || 0) })}
+                                            onCommit={(storageTB) => setNodeTarget(node.index, { storageTB })}
                                             className="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
                                         />
                                     </div>

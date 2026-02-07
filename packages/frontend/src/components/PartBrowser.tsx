@@ -1,10 +1,23 @@
-import { useState, useMemo } from 'react';
-import type { CPU, Memory, Storage, Platform } from '../types/hardware';
+import { useMemo, useState } from 'react';
+import type {
+    BayFormFactor,
+    BayInterface,
+    CPU,
+    Memory,
+    MemoryGen,
+    MemoryType,
+    Platform,
+    SocketType,
+    Storage,
+} from '../types/hardware';
 import { useBuildStore } from '../store/buildStore';
 import { cn } from '../lib/utils';
 import cpuData from '../../../backend/src/data/cpus.json';
 import memoryData from '../../../backend/src/data/memory.json';
 import storageData from '../../../backend/src/data/storage.json';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { v4 as uuidv4 } from 'uuid';
+import { Plus, Trash2 } from 'lucide-react';
 
 type ComponentType = 'cpus' | 'memory' | 'storage';
 
@@ -12,9 +25,124 @@ interface PartBrowserProps {
     nodeIndex: number;
 }
 
+interface CpuFormState {
+    vendor: string;
+    name: string;
+    sku: string;
+    platform: Platform;
+    socket: SocketType;
+    cores: string;
+    threads: string;
+    tdpW: string;
+    memGenSupported: MemoryGen;
+    maxMemSpeedMT: string;
+    lanes: string;
+    msrp: string;
+}
+
+interface MemoryFormState {
+    vendor: string;
+    name: string;
+    sku: string;
+    ddrGen: MemoryGen;
+    type: MemoryType;
+    speedMT: string;
+    capacityGB: string;
+    ranks: string;
+    voltage: string;
+    msrp: string;
+}
+
+interface StorageFormState {
+    vendor: string;
+    name: string;
+    sku: string;
+    type: Storage['type'];
+    formFactor: BayFormFactor;
+    interface: BayInterface;
+    capacityTB: string;
+    tdpW: string;
+    msrp: string;
+}
+
+const SOCKET_OPTIONS: SocketType[] = ['LGA4677', 'SP5', 'LGA4094', 'LGA4926'];
+const MEMORY_TYPE_OPTIONS: MemoryType[] = ['RDIMM', 'LRDIMM', 'ECC-UDIMM'];
+const MEMORY_GEN_OPTIONS: MemoryGen[] = [4, 5];
+const STORAGE_TYPE_OPTIONS: Storage['type'][] = ['SSD', 'HDD', 'NVMe'];
+const BAY_FORM_FACTOR_OPTIONS: BayFormFactor[] = ['2.5"', '3.5"', 'E1.S', 'E1.L', 'E3.S', 'E3.L', 'M.2', 'U.2', 'U.3'];
+const BAY_INTERFACE_OPTIONS: BayInterface[] = ['SATA', 'SAS', 'NVMe'];
+
+const INITIAL_CPU_FORM: CpuFormState = {
+    vendor: '',
+    name: '',
+    sku: '',
+    platform: 'Intel',
+    socket: 'LGA4677',
+    cores: '64',
+    threads: '128',
+    tdpW: '350',
+    memGenSupported: 5,
+    maxMemSpeedMT: '5600',
+    lanes: '80',
+    msrp: '0',
+};
+
+const INITIAL_MEMORY_FORM: MemoryFormState = {
+    vendor: '',
+    name: '',
+    sku: '',
+    ddrGen: 5,
+    type: 'RDIMM',
+    speedMT: '5600',
+    capacityGB: '64',
+    ranks: '2',
+    voltage: '1.1',
+    msrp: '0',
+};
+
+const INITIAL_STORAGE_FORM: StorageFormState = {
+    vendor: '',
+    name: '',
+    sku: '',
+    type: 'NVMe',
+    formFactor: 'U.2',
+    interface: 'NVMe',
+    capacityTB: '3.84',
+    tdpW: '18',
+    msrp: '0',
+};
+
+const parsePositiveInt = (value: string, fallback = 0) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
+const parsePositiveFloat = (value: string, fallback = 0) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
 export function PartBrowser({ nodeIndex }: PartBrowserProps) {
     const [selectedType, setSelectedType] = useState<ComponentType>('cpus');
     const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+    const [showCustomForm, setShowCustomForm] = useState(false);
+
+    const [cpuForm, setCpuForm] = useState<CpuFormState>(INITIAL_CPU_FORM);
+    const [memoryForm, setMemoryForm] = useState<MemoryFormState>(INITIAL_MEMORY_FORM);
+    const [storageForm, setStorageForm] = useState<StorageFormState>(INITIAL_STORAGE_FORM);
+    const [formError, setFormError] = useState<string | null>(null);
+
+    const defaultCpus = useMemo(() => cpuData as CPU[], []);
+    const defaultMemory = useMemo(() => memoryData as Memory[], []);
+    const defaultStorage = useMemo(() => storageData as Storage[], []);
+
+    const [customCpus, setCustomCpus] = useLocalStorage<CPU[]>('parts_custom_cpu_v1', []);
+    const [customMemory, setCustomMemory] = useLocalStorage<Memory[]>('parts_custom_memory_v1', []);
+    const [customStorage, setCustomStorage] = useLocalStorage<Storage[]>('parts_custom_storage_v1', []);
+
+    const [hiddenCpuIds, setHiddenCpuIds] = useLocalStorage<string[]>('parts_hidden_cpu_v1', []);
+    const [hiddenMemoryIds, setHiddenMemoryIds] = useLocalStorage<string[]>('parts_hidden_memory_v1', []);
+    const [hiddenStorageIds, setHiddenStorageIds] = useLocalStorage<string[]>('parts_hidden_storage_v1', []);
 
     const {
         build,
@@ -25,71 +153,233 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
         removeNodeMemory,
         removeNodeStorage,
     } = useBuildStore();
+
     const node = build.nodes[nodeIndex];
+    const visibleCpus = useMemo(
+        () => [...defaultCpus.filter((cpu) => !hiddenCpuIds.includes(cpu.id)), ...customCpus],
+        [defaultCpus, hiddenCpuIds, customCpus]
+    );
+    const visibleMemory = useMemo(
+        () => [...defaultMemory.filter((mem) => !hiddenMemoryIds.includes(mem.id)), ...customMemory],
+        [defaultMemory, hiddenMemoryIds, customMemory]
+    );
+    const visibleStorage = useMemo(
+        () => [...defaultStorage.filter((drive) => !hiddenStorageIds.includes(drive.id)), ...customStorage],
+        [defaultStorage, hiddenStorageIds, customStorage]
+    );
 
-    // Filter CPUs by platform
     const cpus = useMemo(() => {
-        const allCpus = cpuData as CPU[];
-        if (platformFilter === 'all') return allCpus;
-        return allCpus.filter(cpu => cpu.platform === platformFilter);
-    }, [platformFilter]);
+        if (platformFilter === 'all') return visibleCpus;
+        return visibleCpus.filter((cpu) => cpu.platform === platformFilter);
+    }, [visibleCpus, platformFilter]);
 
-    const memory = memoryData as Memory[];
-    const storage = storageData as Storage[];
-    const loading = false;
+    const handleAddCPU = (cpu: CPU) => addNodeCPU(nodeIndex, cpu);
+    const handleAddMemory = (mem: Memory) => addNodeMemory(nodeIndex, mem);
+    const handleAddStorage = (stg: Storage) => addNodeStorage(nodeIndex, stg);
 
-    const handleAddCPU = (cpu: CPU) => {
-        addNodeCPU(nodeIndex, cpu);
+    const handleDeleteCpu = (cpu: CPU) => {
+        if (cpu.id.startsWith('custom-cpu-')) {
+            setCustomCpus((prev) => prev.filter((item) => item.id !== cpu.id));
+            return;
+        }
+        if (!hiddenCpuIds.includes(cpu.id)) {
+            setHiddenCpuIds((prev) => [...prev, cpu.id]);
+        }
     };
 
-    const handleAddMemory = (mem: Memory) => {
-        addNodeMemory(nodeIndex, mem);
+    const handleDeleteMemory = (mem: Memory) => {
+        if (mem.id.startsWith('custom-memory-')) {
+            setCustomMemory((prev) => prev.filter((item) => item.id !== mem.id));
+            return;
+        }
+        if (!hiddenMemoryIds.includes(mem.id)) {
+            setHiddenMemoryIds((prev) => [...prev, mem.id]);
+        }
     };
 
-    const handleAddStorage = (stg: Storage) => {
-        addNodeStorage(nodeIndex, stg);
+    const handleDeleteStorage = (drive: Storage) => {
+        if (drive.id.startsWith('custom-storage-')) {
+            setCustomStorage((prev) => prev.filter((item) => item.id !== drive.id));
+            return;
+        }
+        if (!hiddenStorageIds.includes(drive.id)) {
+            setHiddenStorageIds((prev) => [...prev, drive.id]);
+        }
     };
+
+    const handleAddCustomPart = () => {
+        setFormError(null);
+
+        if (selectedType === 'cpus') {
+            if (!cpuForm.vendor.trim() || !cpuForm.name.trim()) {
+                setFormError('CPU vendor and name are required.');
+                return;
+            }
+
+            const newCpu: CPU = {
+                id: `custom-cpu-${uuidv4()}`,
+                sku: cpuForm.sku.trim() || 'Custom CPU',
+                vendor: cpuForm.vendor.trim(),
+                name: cpuForm.name.trim(),
+                family: 'Custom',
+                platform: cpuForm.platform,
+                cores: Math.max(1, parsePositiveInt(cpuForm.cores, 1)),
+                threads: Math.max(1, parsePositiveInt(cpuForm.threads, 1)),
+                baseClock: 0,
+                constraints: {
+                    socket: cpuForm.socket,
+                    memGenSupported: [cpuForm.memGenSupported],
+                    tdpW: parsePositiveInt(cpuForm.tdpW, 0),
+                    maxMemSpeedMT: parsePositiveInt(cpuForm.maxMemSpeedMT, 0),
+                    lanes: parsePositiveInt(cpuForm.lanes, 0),
+                },
+                msrp: parsePositiveFloat(cpuForm.msrp, 0),
+                currency: 'USD',
+                lastUpdated: new Date().toISOString().slice(0, 10),
+            };
+            setCustomCpus((prev) => [...prev, newCpu]);
+            setCpuForm(INITIAL_CPU_FORM);
+            setShowCustomForm(false);
+            return;
+        }
+
+        if (selectedType === 'memory') {
+            if (!memoryForm.vendor.trim() || !memoryForm.name.trim()) {
+                setFormError('Memory vendor and name are required.');
+                return;
+            }
+
+            const newMemory: Memory = {
+                id: `custom-memory-${uuidv4()}`,
+                sku: memoryForm.sku.trim() || 'Custom DIMM',
+                vendor: memoryForm.vendor.trim(),
+                name: memoryForm.name.trim(),
+                constraints: {
+                    ddrGen: memoryForm.ddrGen,
+                    type: memoryForm.type,
+                    speedMT: Math.max(1, parsePositiveInt(memoryForm.speedMT, 1)),
+                    capacityGB: Math.max(1, parsePositiveInt(memoryForm.capacityGB, 1)),
+                    ranks: Math.max(1, parsePositiveInt(memoryForm.ranks, 1)),
+                    voltage: Math.max(0.5, parsePositiveFloat(memoryForm.voltage, 1.1)),
+                },
+                msrp: parsePositiveFloat(memoryForm.msrp, 0),
+                currency: 'USD',
+                lastUpdated: new Date().toISOString().slice(0, 10),
+            };
+            setCustomMemory((prev) => [...prev, newMemory]);
+            setMemoryForm(INITIAL_MEMORY_FORM);
+            setShowCustomForm(false);
+            return;
+        }
+
+        if (!storageForm.vendor.trim() || !storageForm.name.trim()) {
+            setFormError('Storage vendor and name are required.');
+            return;
+        }
+
+        const newStorage: Storage = {
+            id: `custom-storage-${uuidv4()}`,
+            sku: storageForm.sku.trim() || 'Custom Drive',
+            vendor: storageForm.vendor.trim(),
+            name: storageForm.name.trim(),
+            type: storageForm.type,
+            constraints: {
+                formFactor: storageForm.formFactor,
+                interface: storageForm.interface,
+                capacityTB: Math.max(0.01, parsePositiveFloat(storageForm.capacityTB, 0.01)),
+                tdpW: parsePositiveInt(storageForm.tdpW, 0),
+            },
+            msrp: parsePositiveFloat(storageForm.msrp, 0),
+            currency: 'USD',
+            lastUpdated: new Date().toISOString().slice(0, 10),
+        };
+        setCustomStorage((prev) => [...prev, newStorage]);
+        setStorageForm(INITIAL_STORAGE_FORM);
+        setShowCustomForm(false);
+    };
+
+    const hiddenCount =
+        selectedType === 'cpus'
+            ? hiddenCpuIds.length
+            : selectedType === 'memory'
+                ? hiddenMemoryIds.length
+                : hiddenStorageIds.length;
 
     return (
         <div className="space-y-4">
-            {/* Component Type Tabs */}
             <div className="flex flex-wrap gap-2 border-b border-slate-700">
                 <button
-                    onClick={() => setSelectedType('cpus')}
+                    onClick={() => {
+                        setSelectedType('cpus');
+                        setShowCustomForm(false);
+                        setFormError(null);
+                    }}
                     className={cn(
-                        "px-4 py-2 font-medium transition-colors border-b-2",
+                        'px-4 py-2 font-medium transition-colors border-b-2',
                         selectedType === 'cpus'
-                            ? "border-blue-500 text-blue-400"
-                            : "border-transparent text-slate-400 hover:text-slate-200"
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-slate-200'
                     )}
                 >
                     CPUs
                 </button>
                 <button
-                    onClick={() => setSelectedType('memory')}
+                    onClick={() => {
+                        setSelectedType('memory');
+                        setShowCustomForm(false);
+                        setFormError(null);
+                    }}
                     className={cn(
-                        "px-4 py-2 font-medium transition-colors border-b-2",
+                        'px-4 py-2 font-medium transition-colors border-b-2',
                         selectedType === 'memory'
-                            ? "border-blue-500 text-blue-400"
-                            : "border-transparent text-slate-400 hover:text-slate-200"
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-slate-200'
                     )}
                 >
                     Memory
                 </button>
                 <button
-                    onClick={() => setSelectedType('storage')}
+                    onClick={() => {
+                        setSelectedType('storage');
+                        setShowCustomForm(false);
+                        setFormError(null);
+                    }}
                     className={cn(
-                        "px-4 py-2 font-medium transition-colors border-b-2",
+                        'px-4 py-2 font-medium transition-colors border-b-2',
                         selectedType === 'storage'
-                            ? "border-blue-500 text-blue-400"
-                            : "border-transparent text-slate-400 hover:text-slate-200"
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-slate-200'
                     )}
                 >
                     Storage
                 </button>
             </div>
 
-            {/* Platform Filter (CPUs only) */}
+            <div className="flex flex-wrap items-center gap-2">
+                <button
+                    onClick={() => {
+                        setShowCustomForm((prev) => !prev);
+                        setFormError(null);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                    <Plus size={14} />
+                    Add Custom {selectedType === 'cpus' ? 'CPU' : selectedType === 'memory' ? 'Memory' : 'Storage'}
+                </button>
+                {hiddenCount > 0 && (
+                    <button
+                        onClick={() => {
+                            if (selectedType === 'cpus') setHiddenCpuIds([]);
+                            if (selectedType === 'memory') setHiddenMemoryIds([]);
+                            if (selectedType === 'storage') setHiddenStorageIds([]);
+                        }}
+                        className="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-sm"
+                    >
+                        Restore Hidden ({hiddenCount})
+                    </button>
+                )}
+            </div>
+
             {selectedType === 'cpus' && (
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-slate-400 py-1">Platform:</span>
@@ -98,10 +388,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                             key={platform}
                             onClick={() => setPlatformFilter(platform)}
                             className={cn(
-                                "px-3 py-1 rounded text-sm transition-colors",
+                                'px-3 py-1 rounded text-sm transition-colors',
                                 platformFilter === platform
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                             )}
                             data-testid={`platform-${platform}`}
                         >
@@ -111,14 +401,86 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                 </div>
             )}
 
-            {/* Parts List */}
-            <div className="space-y-2">
-                {loading && (
-                    <div className="text-center py-8 text-slate-400">Loading...</div>
-                )}
+            {showCustomForm && (
+                <div className="rounded border border-slate-700 bg-slate-800 p-4 space-y-3">
+                    <h4 className="font-semibold">
+                        New Custom {selectedType === 'cpus' ? 'CPU' : selectedType === 'memory' ? 'Memory' : 'Storage'}
+                    </h4>
+                    {formError && <p className="text-sm text-red-400">{formError}</p>}
 
-                {/* CPUs */}
-                {!loading && selectedType === 'cpus' && cpus.map((cpu) => {
+                    {selectedType === 'cpus' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input value={cpuForm.vendor} onChange={(e) => setCpuForm({ ...cpuForm, vendor: e.target.value })} placeholder="Vendor" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={cpuForm.name} onChange={(e) => setCpuForm({ ...cpuForm, name: e.target.value })} placeholder="Name" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={cpuForm.sku} onChange={(e) => setCpuForm({ ...cpuForm, sku: e.target.value })} placeholder="SKU" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={cpuForm.platform} onChange={(e) => setCpuForm({ ...cpuForm, platform: e.target.value as Platform })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                <option value="Intel">Intel</option>
+                                <option value="AMD">AMD</option>
+                                <option value="Ampere">Ampere</option>
+                            </select>
+                            <select value={cpuForm.socket} onChange={(e) => setCpuForm({ ...cpuForm, socket: e.target.value as SocketType })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {SOCKET_OPTIONS.map((socket) => <option key={socket} value={socket}>{socket}</option>)}
+                            </select>
+                            <select value={cpuForm.memGenSupported} onChange={(e) => setCpuForm({ ...cpuForm, memGenSupported: Number(e.target.value) as MemoryGen })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {MEMORY_GEN_OPTIONS.map((gen) => <option key={gen} value={gen}>DDR{gen}</option>)}
+                            </select>
+                            <input type="number" min={1} value={cpuForm.cores} onChange={(e) => setCpuForm({ ...cpuForm, cores: e.target.value })} placeholder="Cores" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={1} value={cpuForm.threads} onChange={(e) => setCpuForm({ ...cpuForm, threads: e.target.value })} placeholder="Threads" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} value={cpuForm.tdpW} onChange={(e) => setCpuForm({ ...cpuForm, tdpW: e.target.value })} placeholder="TDP (W)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} value={cpuForm.maxMemSpeedMT} onChange={(e) => setCpuForm({ ...cpuForm, maxMemSpeedMT: e.target.value })} placeholder="Max Mem MT/s" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} value={cpuForm.lanes} onChange={(e) => setCpuForm({ ...cpuForm, lanes: e.target.value })} placeholder="PCIe Lanes" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} step="0.01" value={cpuForm.msrp} onChange={(e) => setCpuForm({ ...cpuForm, msrp: e.target.value })} placeholder="MSRP" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                        </div>
+                    )}
+
+                    {selectedType === 'memory' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input value={memoryForm.vendor} onChange={(e) => setMemoryForm({ ...memoryForm, vendor: e.target.value })} placeholder="Vendor" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={memoryForm.name} onChange={(e) => setMemoryForm({ ...memoryForm, name: e.target.value })} placeholder="Name" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={memoryForm.sku} onChange={(e) => setMemoryForm({ ...memoryForm, sku: e.target.value })} placeholder="SKU" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={memoryForm.ddrGen} onChange={(e) => setMemoryForm({ ...memoryForm, ddrGen: Number(e.target.value) as MemoryGen })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {MEMORY_GEN_OPTIONS.map((gen) => <option key={gen} value={gen}>DDR{gen}</option>)}
+                            </select>
+                            <select value={memoryForm.type} onChange={(e) => setMemoryForm({ ...memoryForm, type: e.target.value as MemoryType })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {MEMORY_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                            </select>
+                            <input type="number" min={1} value={memoryForm.capacityGB} onChange={(e) => setMemoryForm({ ...memoryForm, capacityGB: e.target.value })} placeholder="Capacity (GB)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={1} value={memoryForm.speedMT} onChange={(e) => setMemoryForm({ ...memoryForm, speedMT: e.target.value })} placeholder="Speed MT/s" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={1} value={memoryForm.ranks} onChange={(e) => setMemoryForm({ ...memoryForm, ranks: e.target.value })} placeholder="Ranks" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} step="0.01" value={memoryForm.voltage} onChange={(e) => setMemoryForm({ ...memoryForm, voltage: e.target.value })} placeholder="Voltage" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} step="0.01" value={memoryForm.msrp} onChange={(e) => setMemoryForm({ ...memoryForm, msrp: e.target.value })} placeholder="MSRP" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                        </div>
+                    )}
+
+                    {selectedType === 'storage' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input value={storageForm.vendor} onChange={(e) => setStorageForm({ ...storageForm, vendor: e.target.value })} placeholder="Vendor" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={storageForm.name} onChange={(e) => setStorageForm({ ...storageForm, name: e.target.value })} placeholder="Name" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={storageForm.sku} onChange={(e) => setStorageForm({ ...storageForm, sku: e.target.value })} placeholder="SKU" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={storageForm.type} onChange={(e) => setStorageForm({ ...storageForm, type: e.target.value as Storage['type'] })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {STORAGE_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                            </select>
+                            <select value={storageForm.formFactor} onChange={(e) => setStorageForm({ ...storageForm, formFactor: e.target.value as BayFormFactor })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {BAY_FORM_FACTOR_OPTIONS.map((ff) => <option key={ff} value={ff}>{ff}</option>)}
+                            </select>
+                            <select value={storageForm.interface} onChange={(e) => setStorageForm({ ...storageForm, interface: e.target.value as BayInterface })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {BAY_INTERFACE_OPTIONS.map((iface) => <option key={iface} value={iface}>{iface}</option>)}
+                            </select>
+                            <input type="number" min={0.01} step="0.01" value={storageForm.capacityTB} onChange={(e) => setStorageForm({ ...storageForm, capacityTB: e.target.value })} placeholder="Capacity (TB)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} value={storageForm.tdpW} onChange={(e) => setStorageForm({ ...storageForm, tdpW: e.target.value })} placeholder="TDP (W)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} step="0.01" value={storageForm.msrp} onChange={(e) => setStorageForm({ ...storageForm, msrp: e.target.value })} placeholder="MSRP" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                        </div>
+                    )}
+
+                    <div className="flex gap-2">
+                        <button onClick={handleAddCustomPart} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm">Save</button>
+                        <button onClick={() => { setShowCustomForm(false); setFormError(null); }} className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">Cancel</button>
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-2">
+                {selectedType === 'cpus' && cpus.map((cpu) => {
                     const isCompatible = !node.motherboard ||
                         node.motherboard.constraints.socket === cpu.constraints.socket;
                     const selectedCount = node.cpus.filter(c => c.id === cpu.id).length;
@@ -132,10 +494,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                         <div
                             key={cpu.id}
                             className={cn(
-                                "p-4 rounded-lg border transition-all",
-                                !isCompatible ? "border-slate-800 bg-slate-900 opacity-50" :
-                                    selectedCount > 0 ? "border-green-700 bg-green-950/30" :
-                                        "border-slate-700 bg-slate-800 hover:border-blue-600"
+                                'p-4 rounded-lg border transition-all',
+                                !isCompatible ? 'border-slate-800 bg-slate-900 opacity-50' :
+                                    selectedCount > 0 ? 'border-green-700 bg-green-950/30' :
+                                        'border-slate-700 bg-slate-800 hover:border-blue-600'
                             )}
                         >
                             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
@@ -154,11 +516,20 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     )}
                                 </div>
                                 <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
-                                    {cpu.msrp && (
-                                        <span className="text-blue-400 font-semibold">
-                                            ${cpu.msrp.toLocaleString()}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {cpu.msrp !== undefined && (
+                                            <span className="text-blue-400 font-semibold">
+                                                ${cpu.msrp.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => handleDeleteCpu(cpu)}
+                                            className="p-1 text-red-400 hover:text-red-300"
+                                            title="Delete from catalog"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
@@ -167,10 +538,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                             }}
                                             disabled={selectedCount === 0}
                                             className={cn(
-                                                "px-2 py-1 rounded text-sm",
+                                                'px-2 py-1 rounded text-sm',
                                                 selectedCount === 0
-                                                    ? "bg-slate-700 cursor-not-allowed"
-                                                    : "bg-red-600 hover:bg-red-700"
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-red-600 hover:bg-red-700'
                                             )}
                                         >
                                             -
@@ -180,10 +551,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                             onClick={() => handleAddCPU(cpu)}
                                             disabled={!isCompatible || slotsFull}
                                             className={cn(
-                                                "px-2 py-1 rounded text-sm",
+                                                'px-2 py-1 rounded text-sm',
                                                 isCompatible && !slotsFull
-                                                    ? "bg-blue-600 hover:bg-blue-700"
-                                                    : "bg-slate-700 cursor-not-allowed"
+                                                    ? 'bg-blue-600 hover:bg-blue-700'
+                                                    : 'bg-slate-700 cursor-not-allowed'
                                             )}
                                         >
                                             +
@@ -198,23 +569,18 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                     );
                 })}
 
-                {/* Memory */}
-                {!loading && selectedType === 'memory' && memory.map((mem) => {
+                {selectedType === 'memory' && visibleMemory.map((mem) => {
                     const motherboardCompatible = !node.motherboard || (
                         node.motherboard.constraints.memory.ddrGen === mem.constraints.ddrGen &&
                         node.motherboard.constraints.memory.dimmTypes.includes(mem.constraints.type)
                     );
 
-                    // Check if *any* of the selected CPUs support this memory generation
-                    // If no CPUs are selected, we don't block based on CPU
                     const cpuCompatible = node.cpus.length === 0 || node.cpus.some(cpu =>
                         cpu.constraints.memGenSupported.includes(mem.constraints.ddrGen)
                     );
 
                     const isCompatible = motherboardCompatible && cpuCompatible;
                     const selectedCount = node.memory.filter((dimm) => dimm.id === mem.id).length;
-
-                    // Check for max DIMM constraint
                     const currentDimmCount = node.memory.length;
                     const chassisMaxDimms = build.chassis?.constraints.maxDimmsPerNode;
                     const motherboardDimmSlots = node.motherboard
@@ -230,9 +596,9 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                         <div
                             key={mem.id}
                             className={cn(
-                                "p-4 rounded-lg border transition-all",
-                                !isCompatible ? "border-slate-800 bg-slate-900 opacity-50" :
-                                    "border-slate-700 bg-slate-800 hover:border-blue-600"
+                                'p-4 rounded-lg border transition-all',
+                                !isCompatible ? 'border-slate-800 bg-slate-900 opacity-50' :
+                                    'border-slate-700 bg-slate-800 hover:border-blue-600'
                             )}
                         >
                             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
@@ -262,11 +628,20 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     )}
                                 </div>
                                 <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
-                                    {mem.msrp && (
-                                        <span className="text-blue-400 font-semibold">
-                                            ${mem.msrp.toLocaleString()}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {mem.msrp !== undefined && (
+                                            <span className="text-blue-400 font-semibold">
+                                                ${mem.msrp.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => handleDeleteMemory(mem)}
+                                            className="p-1 text-red-400 hover:text-red-300"
+                                            title="Delete from catalog"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
@@ -275,10 +650,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                             }}
                                             disabled={selectedCount === 0}
                                             className={cn(
-                                                "px-2 py-1 rounded text-sm",
+                                                'px-2 py-1 rounded text-sm',
                                                 selectedCount === 0
-                                                    ? "bg-slate-700 cursor-not-allowed"
-                                                    : "bg-red-600 hover:bg-red-700"
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-red-600 hover:bg-red-700'
                                             )}
                                         >
                                             -
@@ -288,10 +663,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                             onClick={() => handleAddMemory(mem)}
                                             disabled={!isCompatible || slotsFull}
                                             className={cn(
-                                                "px-2 py-1 rounded text-sm",
+                                                'px-2 py-1 rounded text-sm',
                                                 !isCompatible || slotsFull
-                                                    ? "bg-slate-700 cursor-not-allowed"
-                                                    : "bg-blue-600 hover:bg-blue-700"
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-blue-600 hover:bg-blue-700'
                                             )}
                                         >
                                             +
@@ -303,17 +678,16 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                     );
                 })}
 
-                {/* Storage */}
-                {!loading && selectedType === 'storage' && storage.map((stg) => {
+                {selectedType === 'storage' && visibleStorage.map((stg) => {
                     const selectedCount = node.storage.filter((drive) => drive.id === stg.id).length;
                     return (
                         <div
                             key={stg.id}
                             className={cn(
-                                "p-4 rounded-lg border transition-all",
+                                'p-4 rounded-lg border transition-all',
                                 selectedCount > 0
-                                    ? "border-green-700 bg-green-950/30"
-                                    : "border-slate-700 bg-slate-800 hover:border-blue-600"
+                                    ? 'border-green-700 bg-green-950/30'
+                                    : 'border-slate-700 bg-slate-800 hover:border-blue-600'
                             )}
                         >
                             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
@@ -328,11 +702,20 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
-                                    {stg.msrp && (
-                                        <span className="text-blue-400 font-semibold">
-                                            ${stg.msrp.toLocaleString()}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {stg.msrp !== undefined && (
+                                            <span className="text-blue-400 font-semibold">
+                                                ${stg.msrp.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => handleDeleteStorage(stg)}
+                                            className="p-1 text-red-400 hover:text-red-300"
+                                            title="Delete from catalog"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => {
@@ -341,10 +724,10 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                             }}
                                             disabled={selectedCount === 0}
                                             className={cn(
-                                                "px-2 py-1 rounded text-sm",
+                                                'px-2 py-1 rounded text-sm',
                                                 selectedCount === 0
-                                                    ? "bg-slate-700 cursor-not-allowed"
-                                                    : "bg-red-600 hover:bg-red-700"
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-red-600 hover:bg-red-700'
                                             )}
                                         >
                                             -
