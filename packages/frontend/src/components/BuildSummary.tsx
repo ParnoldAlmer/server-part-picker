@@ -359,7 +359,7 @@ export function BuildSummary() {
                     <h3 className="text-lg font-semibold">Planner BOM</h3>
                     <span className="text-xs text-slate-400">Edit unit prices to match vendor quotes</span>
                 </div>
-                <div className="space-y-3 md:hidden">
+                <div className="space-y-3">
                     {plannerRows.map((row) => {
                         const overrideKey = row.overrideKey;
                         const overrideValue = overrideKey ? priceOverrides[overrideKey] : undefined;
@@ -367,26 +367,36 @@ export function BuildSummary() {
                         const subtotal = unitPrice * row.quantity;
 
                         return (
-                            <div key={row.key} className="rounded border border-slate-700 bg-slate-900 p-3 space-y-2">
-                                <div className="flex justify-between gap-3">
-                                    <span className="text-xs text-slate-500 uppercase">Category</span>
-                                    <span className="text-sm text-slate-300">{row.category}</span>
+                            <div key={row.key} className="rounded border border-slate-700 bg-slate-900 p-3 space-y-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-wide text-slate-500">Category</div>
+                                        <div className="text-sm text-slate-300">{row.category}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-wide text-slate-500">Location</div>
+                                        <div className="text-sm text-slate-400">{row.location}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-wide text-slate-500">Qty</div>
+                                        <div className="text-sm">{row.quantity}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-wide text-slate-500">Subtotal</div>
+                                        <div className="text-sm font-medium text-slate-200">
+                                            ${subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between gap-3">
-                                    <span className="text-xs text-slate-500 uppercase">Location</span>
-                                    <span className="text-sm text-slate-400">{row.location}</span>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-xs text-slate-500 uppercase">Part</span>
+
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-wide text-slate-500">Part</div>
                                     <div className="text-sm text-slate-200 break-words">{row.item}</div>
                                 </div>
-                                <div className="flex justify-between gap-3">
-                                    <span className="text-xs text-slate-500 uppercase">Qty</span>
-                                    <span className="text-sm">{row.quantity}</span>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-xs text-slate-500 uppercase">Unit</span>
-                                    <div className="flex items-center gap-2">
+
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-wide text-slate-500">Unit</div>
+                                    <div className="flex items-center gap-2 mt-1">
                                         <input
                                             type="number"
                                             min={0}
@@ -398,7 +408,7 @@ export function BuildSummary() {
                                                     setPriceOverride(overrideKey, nextValue);
                                                 }
                                             }}
-                                            className="w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
+                                            className="w-full sm:w-32 min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
                                         />
                                         {overrideValue !== undefined && overrideKey && (
                                             <button
@@ -409,70 +419,10 @@ export function BuildSummary() {
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                                <div className="flex justify-between gap-3">
-                                    <span className="text-xs text-slate-500 uppercase">Subtotal</span>
-                                    <span className="text-sm font-medium text-slate-200">
-                                        ${subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                                    </span>
                                 </div>
                             </div>
                         );
                     })}
-                </div>
-
-                <div className="hidden md:block">
-                    <div className="grid grid-cols-[110px_90px_minmax(0,1fr)_50px_140px_120px] gap-2 text-xs uppercase tracking-wide text-slate-400 border-b border-slate-700 pb-2">
-                        <div>Category</div>
-                        <div>Location</div>
-                        <div>Part</div>
-                        <div>Qty</div>
-                        <div>Unit</div>
-                        <div>Subtotal</div>
-                    </div>
-                    <div className="space-y-2 mt-2">
-                        {plannerRows.map((row) => {
-                            const overrideKey = row.overrideKey;
-                            const overrideValue = overrideKey ? priceOverrides[overrideKey] : undefined;
-                            const unitPrice = overrideValue ?? row.defaultUnitPrice;
-                            const subtotal = unitPrice * row.quantity;
-
-                            return (
-                                <div key={row.key} className="grid grid-cols-[110px_90px_minmax(0,1fr)_50px_140px_120px] gap-2 items-center rounded border border-slate-700 bg-slate-900 p-3">
-                                    <div className="text-slate-300">{row.category}</div>
-                                    <div className="text-slate-400">{row.location}</div>
-                                    <div className="text-slate-200 min-w-0 break-words">{row.item}</div>
-                                    <div>{row.quantity}</div>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            step="0.01"
-                                            value={unitPrice}
-                                            onChange={(event) => {
-                                                const nextValue = event.target.value === '' ? undefined : Number(event.target.value);
-                                                if (overrideKey) {
-                                                    setPriceOverride(overrideKey, nextValue);
-                                                }
-                                            }}
-                                            className="w-24 bg-slate-950 border border-slate-700 rounded px-2 py-1"
-                                        />
-                                        {overrideValue !== undefined && overrideKey && (
-                                            <button
-                                                onClick={() => setPriceOverride(overrideKey, undefined)}
-                                                className="text-xs text-slate-400 hover:text-slate-200 whitespace-nowrap"
-                                            >
-                                                MSRP
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="font-medium text-slate-200">
-                                        ${subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
                 </div>
             </div>
 
