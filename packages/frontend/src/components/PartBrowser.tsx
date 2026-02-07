@@ -19,10 +19,12 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Trash2 } from 'lucide-react';
 
-type ComponentType = 'cpus' | 'memory' | 'storage';
+export type ComponentType = 'cpus' | 'memory' | 'storage';
 
 interface PartBrowserProps {
     nodeIndex: number;
+    selectedType?: ComponentType;
+    onSelectedTypeChange?: (type: ComponentType) => void;
 }
 
 interface CpuFormState {
@@ -66,7 +68,7 @@ interface StorageFormState {
 }
 
 const SOCKET_OPTIONS: SocketType[] = ['LGA4677', 'SP5', 'LGA4094', 'LGA4926'];
-const MEMORY_TYPE_OPTIONS: MemoryType[] = ['RDIMM', 'LRDIMM', 'ECC-UDIMM'];
+const MEMORY_TYPE_OPTIONS: MemoryType[] = ['RDIMM', 'LRDIMM', 'ECC-UDIMM', 'UDIMM'];
 const MEMORY_GEN_OPTIONS: MemoryGen[] = [4, 5];
 const STORAGE_TYPE_OPTIONS: Storage['type'][] = ['SSD', 'HDD', 'NVMe'];
 const BAY_FORM_FACTOR_OPTIONS: BayFormFactor[] = ['2.5"', '3.5"', 'E1.S', 'E1.L', 'E3.S', 'E3.L', 'M.2', 'U.2', 'U.3'];
@@ -122,8 +124,15 @@ const parsePositiveFloat = (value: string, fallback = 0) => {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 };
 
-export function PartBrowser({ nodeIndex }: PartBrowserProps) {
-    const [selectedType, setSelectedType] = useState<ComponentType>('cpus');
+export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelectedTypeChange }: PartBrowserProps) {
+    const [internalSelectedType, setInternalSelectedType] = useState<ComponentType>('cpus');
+    const selectedType = selectedTypeProp ?? internalSelectedType;
+    const setSelectedType = (nextType: ComponentType) => {
+        if (selectedTypeProp === undefined) {
+            setInternalSelectedType(nextType);
+        }
+        onSelectedTypeChange?.(nextType);
+    };
     const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
     const [showCustomForm, setShowCustomForm] = useState(false);
 

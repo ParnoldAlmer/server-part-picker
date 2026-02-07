@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { useBuildStore } from '../store/buildStore';
-import { PartBrowser } from './PartBrowser';
+import { PartBrowser, type ComponentType } from './PartBrowser';
 import type { Motherboard } from '../types/hardware';
 import motherboardData from '../../../backend/src/data/motherboards.json';
 
@@ -17,6 +17,7 @@ export function NodeTabs() {
     const [selectedNodeIndex, setSelectedNodeIndex] = useState(0);
     const [motherboards] = useState<Motherboard[]>(motherboardData as Motherboard[]);
     const [showMoboSelector, setShowMoboSelector] = useState(false);
+    const [partBrowserType, setPartBrowserType] = useState<ComponentType>('cpus');
 
     if (!build.chassis) return null;
 
@@ -25,6 +26,16 @@ export function NodeTabs() {
         const overrideValue = priceOverrides[getOverrideKey(type, id)];
         if (overrideValue !== undefined) return overrideValue;
         return fallback;
+    };
+    const focusPartPicker = (type: ComponentType) => {
+        setPartBrowserType(type);
+        const pickerId = `part-browser-${selectedNodeIndex}`;
+        requestAnimationFrame(() => {
+            const pickerEl = document.getElementById(pickerId);
+            if (pickerEl) {
+                pickerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
     };
 
     const currentNode = build.nodes[selectedNodeIndex];
@@ -78,6 +89,30 @@ export function NodeTabs() {
             return acc;
         }, {})
     );
+    const motherboardPrice = currentNode.motherboard
+        ? getDisplayPrice('motherboard', currentNode.motherboard.id, currentNode.motherboard.msrp)
+        : undefined;
+    const cpuTotalPrice = groupedCpus.reduce(
+        (sum, cpu) => sum + ((getDisplayPrice('cpu', cpu.id, cpu.msrp) ?? 0) * cpu.qty),
+        0
+    );
+    const memoryTotalPrice = groupedMemory.reduce(
+        (sum, dimm) => sum + ((getDisplayPrice('memory', dimm.id, dimm.msrp) ?? 0) * dimm.qty),
+        0
+    );
+    const storageTotalPrice = groupedStorage.reduce(
+        (sum, drive) => sum + ((getDisplayPrice('storage', drive.id, drive.msrp) ?? 0) * drive.qty),
+        0
+    );
+    const cpuSummary = groupedCpus.length > 0
+        ? `${groupedCpus[0].qty}x ${groupedCpus[0].name}${groupedCpus.length > 1 ? ` +${groupedCpus.length - 1} more` : ''}`
+        : 'No CPU selected';
+    const memorySummary = groupedMemory.length > 0
+        ? `${currentNode.memory.length} DIMMs (${currentNode.memory.reduce((sum, m) => sum + m.constraints.capacityGB, 0)}GB total)`
+        : 'No memory selected';
+    const storageSummary = groupedStorage.length > 0
+        ? `${currentNode.storage.length} drive${currentNode.storage.length > 1 ? 's' : ''}`
+        : 'No storage selected';
 
     return (
         <div className="space-y-6">
@@ -98,6 +133,87 @@ export function NodeTabs() {
                         Node {idx + 1}
                     </button>
                 ))}
+            </div>
+
+            <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-700 bg-slate-800">
+                    <h3 className="font-semibold text-slate-100">Choose Your Server Parts</h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-sm">
+                        <thead className="bg-slate-900 text-slate-400">
+                            <tr>
+                                <th className="text-left font-medium px-4 py-2">Component</th>
+                                <th className="text-left font-medium px-4 py-2">Selection</th>
+                                <th className="text-left font-medium px-4 py-2">Qty</th>
+                                <th className="text-left font-medium px-4 py-2">Price</th>
+                                <th className="text-left font-medium px-4 py-2">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-t border-slate-700">
+                                <td className="px-4 py-3 font-medium text-blue-300">Motherboard</td>
+                                <td className="px-4 py-3 text-slate-300">
+                                    {currentNode.motherboard ? `${currentNode.motherboard.vendor} ${currentNode.motherboard.name}` : 'No motherboard selected'}
+                                </td>
+                                <td className="px-4 py-3 text-slate-400">{currentNode.motherboard ? 1 : 0}</td>
+                                <td className="px-4 py-3 text-slate-200">
+                                    {motherboardPrice !== undefined ? `$${motherboardPrice.toLocaleString()}` : '—'}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <button
+                                        onClick={() => setShowMoboSelector(true)}
+                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs"
+                                    >
+                                        {currentNode.motherboard ? 'Change Motherboard' : 'Choose Motherboard'}
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr className="border-t border-slate-700">
+                                <td className="px-4 py-3 font-medium text-blue-300">CPU</td>
+                                <td className="px-4 py-3 text-slate-300">{cpuSummary}</td>
+                                <td className="px-4 py-3 text-slate-400">{currentNode.cpus.length}</td>
+                                <td className="px-4 py-3 text-slate-200">{cpuTotalPrice > 0 ? `$${cpuTotalPrice.toLocaleString()}` : '—'}</td>
+                                <td className="px-4 py-3">
+                                    <button
+                                        onClick={() => focusPartPicker('cpus')}
+                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs"
+                                    >
+                                        Choose CPU
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr className="border-t border-slate-700">
+                                <td className="px-4 py-3 font-medium text-blue-300">Memory</td>
+                                <td className="px-4 py-3 text-slate-300">{memorySummary}</td>
+                                <td className="px-4 py-3 text-slate-400">{currentNode.memory.length}</td>
+                                <td className="px-4 py-3 text-slate-200">{memoryTotalPrice > 0 ? `$${memoryTotalPrice.toLocaleString()}` : '—'}</td>
+                                <td className="px-4 py-3">
+                                    <button
+                                        onClick={() => focusPartPicker('memory')}
+                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs"
+                                    >
+                                        Choose Memory
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr className="border-t border-slate-700">
+                                <td className="px-4 py-3 font-medium text-blue-300">Storage</td>
+                                <td className="px-4 py-3 text-slate-300">{storageSummary}</td>
+                                <td className="px-4 py-3 text-slate-400">{currentNode.storage.length}</td>
+                                <td className="px-4 py-3 text-slate-200">{storageTotalPrice > 0 ? `$${storageTotalPrice.toLocaleString()}` : '—'}</td>
+                                <td className="px-4 py-3">
+                                    <button
+                                        onClick={() => focusPartPicker('storage')}
+                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-white text-xs"
+                                    >
+                                        Choose Storage
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Motherboard Selection */}
@@ -277,9 +393,13 @@ export function NodeTabs() {
             </div>
 
             {/* Part Browser */}
-            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div id={`part-browser-${selectedNodeIndex}`} className="bg-slate-800 rounded-lg border border-slate-700 p-4">
                 <h3 className="font-semibold mb-4">Add Components</h3>
-                <PartBrowser nodeIndex={selectedNodeIndex} />
+                <PartBrowser
+                    nodeIndex={selectedNodeIndex}
+                    selectedType={partBrowserType}
+                    onSelectedTypeChange={setPartBrowserType}
+                />
             </div>
         </div>
     );
