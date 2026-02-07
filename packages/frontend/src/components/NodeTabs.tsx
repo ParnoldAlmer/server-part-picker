@@ -8,6 +8,7 @@ import motherboardData from '../../../backend/src/data/motherboards.json';
 export function NodeTabs() {
     const {
         build,
+        priceOverrides,
         setNodeMotherboard,
         removeNodeCPU,
         removeNodeMemory,
@@ -18,6 +19,13 @@ export function NodeTabs() {
     const [showMoboSelector, setShowMoboSelector] = useState(false);
 
     if (!build.chassis) return null;
+
+    const getOverrideKey = (type: string, id: string): string => `${type}:${id}`;
+    const getDisplayPrice = (type: string, id: string, fallback?: number): number | undefined => {
+        const overrideValue = priceOverrides[getOverrideKey(type, id)];
+        if (overrideValue !== undefined) return overrideValue;
+        return fallback;
+    };
 
     const currentNode = build.nodes[selectedNodeIndex];
     const groupedCpus = Object.values(
@@ -107,6 +115,11 @@ export function NodeTabs() {
                                 DDR{currentNode.motherboard.constraints.memory.ddrGen} •
                                 {currentNode.motherboard.constraints.memory.channelsPerSocket * currentNode.motherboard.constraints.memory.dimmsPerChannel * currentNode.motherboard.constraints.memory.socketsCount} DIMM slots
                             </div>
+                            {getDisplayPrice('motherboard', currentNode.motherboard.id, currentNode.motherboard.msrp) !== undefined && (
+                                <div className="text-sm text-blue-400 font-semibold mt-2">
+                                    ${getDisplayPrice('motherboard', currentNode.motherboard.id, currentNode.motherboard.msrp)?.toLocaleString()}
+                                </div>
+                            )}
                         </div>
                         <button
                             onClick={() => setShowMoboSelector(true)}
@@ -157,9 +170,9 @@ export function NodeTabs() {
                                             <span>DDR{mobo.constraints.memory.ddrGen}</span>
                                             <span>{mobo.constraints.memory.channelsPerSocket * mobo.constraints.memory.dimmsPerChannel * mobo.constraints.memory.socketsCount} slots</span>
                                         </div>
-                                        {mobo.msrp && (
+                                        {getDisplayPrice('motherboard', mobo.id, mobo.msrp) !== undefined && (
                                             <div className="text-blue-400 font-semibold mt-2">
-                                                ${mobo.msrp.toLocaleString()}
+                                                ${getDisplayPrice('motherboard', mobo.id, mobo.msrp)?.toLocaleString()}
                                             </div>
                                         )}
                                     </button>
@@ -181,7 +194,9 @@ export function NodeTabs() {
                                 <div key={cpu.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
                                     <span className="min-w-0 break-words">{cpu.qty}x {cpu.name} ({cpu.cores}C, {cpu.tdpW}W)</span>
                                     <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
-                                        {cpu.msrp && <span className="text-blue-400">${cpu.msrp.toLocaleString()}</span>}
+                                        {getDisplayPrice('cpu', cpu.id, cpu.msrp) !== undefined && (
+                                            <span className="text-blue-400">${getDisplayPrice('cpu', cpu.id, cpu.msrp)?.toLocaleString()}</span>
+                                        )}
                                         <button
                                             onClick={() => {
                                                 const idx = currentNode.cpus.findIndex((selected) => selected.id === cpu.id);
@@ -210,7 +225,9 @@ export function NodeTabs() {
                                 <div key={dimm.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
                                     <span className="min-w-0 break-words">{dimm.qty}x {dimm.name} ({dimm.capacityGB}GB DDR{dimm.ddrGen} {dimm.speedMT}MT/s)</span>
                                     <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
-                                        {dimm.msrp && <span className="text-blue-400">${dimm.msrp.toLocaleString()}</span>}
+                                        {getDisplayPrice('memory', dimm.id, dimm.msrp) !== undefined && (
+                                            <span className="text-blue-400">${getDisplayPrice('memory', dimm.id, dimm.msrp)?.toLocaleString()}</span>
+                                        )}
                                         <button
                                             onClick={() => {
                                                 const idx = currentNode.memory.findIndex((selected) => selected.id === dimm.id);
@@ -239,7 +256,9 @@ export function NodeTabs() {
                                 <div key={drive.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
                                     <span className="min-w-0 break-words">{drive.qty}x {drive.name} ({drive.capacityTB}TB {drive.formFactor} {drive.iface})</span>
                                     <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
-                                        {drive.msrp && <span className="text-blue-400">${drive.msrp.toLocaleString()}</span>}
+                                        {getDisplayPrice('storage', drive.id, drive.msrp) !== undefined && (
+                                            <span className="text-blue-400">${getDisplayPrice('storage', drive.id, drive.msrp)?.toLocaleString()}</span>
+                                        )}
                                         <button
                                             onClick={() => {
                                                 const idx = currentNode.storage.findIndex((selected) => selected.id === drive.id);
