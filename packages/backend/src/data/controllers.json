@@ -1,0 +1,77 @@
+[
+    {
+        "id": "hba-9500-8i",
+        "sku": "9500-8i",
+        "vendor": "Broadcom",
+        "name": "Tri-Mode HBA 9500-8i",
+        "constraints": {
+            "type": "Tri-Mode",
+            "pcieGen": 4,
+            "pcieLanes": 8,
+            "ports": [
+                {
+                    "connector": "SFF-8654",
+                    "count": 2,
+                    "lanesPerPort": 4,
+                    "interface": "SAS"
+                },
+                {
+                    "connector": "SFF-8654",
+                    "count": 2,
+                    "lanesPerPort": 4,
+                    "interface": "NVMe"
+                }
+            ],
+            "maxDrives": 16
+        },
+        "msrp": 699,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    },
+    {
+        "id": "hba-9400-16i",
+        "sku": "9400-16i",
+        "vendor": "Broadcom",
+        "name": "SAS HBA 9400-16i",
+        "constraints": {
+            "type": "HBA",
+            "pcieGen": 3,
+            "pcieLanes": 8,
+            "ports": [
+                {
+                    "connector": "SFF-8643",
+                    "count": 4,
+                    "lanesPerPort": 4,
+                    "interface": "SAS"
+                }
+            ],
+            "maxDrives": 16
+        },
+        "msrp": 479,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    },
+    {
+        "id": "raid-9560-16i",
+        "sku": "9560-16i",
+        "vendor": "Broadcom",
+        "name": "MegaRAID 9560-16i",
+        "constraints": {
+            "type": "RAID",
+            "pcieGen": 4,
+            "pcieLanes": 8,
+            "ports": [
+                {
+                    "connector": "SFF-8643",
+                    "count": 4,
+                    "lanesPerPort": 4,
+                    "interface": "SAS"
+                }
+            ],
+            "maxDrives": 16
+        },
+        "msrp": 849,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    }
+]

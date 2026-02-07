@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { Build, Chassis, Node, Motherboard, CPU, Memory, Storage } from '../types/hardware';
+import type { Build, Chassis, Node, Motherboard, CPU, Memory, Storage, NetworkAdapter, ControllerCard } from '../types/hardware';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface NodePlanningTarget {
@@ -17,6 +17,14 @@ export interface CustomCostItem {
     category: PlannerCostCategory;
     quantity: number;
     unitPrice: number;
+}
+
+export interface SharedBuildBundle {
+    build: Build;
+    priceOverrides: Record<string, number>;
+    nodeTargets: Record<number, NodePlanningTarget>;
+    customCosts: CustomCostItem[];
+    shareCode?: string;
 }
 
 interface BuildStore {
@@ -36,6 +44,10 @@ interface BuildStore {
     removeNodeMemory: (nodeIndex: number, memoryIndex: number) => void;
     addNodeStorage: (nodeIndex: number, storage: Storage) => void;
     removeNodeStorage: (nodeIndex: number, storageIndex: number) => void;
+    addNodeController: (nodeIndex: number, controller: ControllerCard) => void;
+    removeNodeController: (nodeIndex: number, controllerIndex: number) => void;
+    addNodeNetworkAdapter: (nodeIndex: number, networkAdapter: NetworkAdapter) => void;
+    removeNodeNetworkAdapter: (nodeIndex: number, networkAdapterIndex: number) => void;
 
     // Planner actions
     setPriceOverride: (itemKey: string, price?: number) => void;
@@ -47,6 +59,8 @@ interface BuildStore {
     // Build management
     resetBuild: () => void;
     loadBuild: (build: Build) => void;
+    loadSharedBundle: (bundle: SharedBuildBundle) => void;
+    setBuildShareCode: (shareCode?: string) => void;
 }
 
 const createEmptyBuild = (): Build => ({
@@ -65,6 +79,9 @@ const createEmptyNode = (index: number): Node => ({
     cpus: [],
     memory: [],
     storage: [],
+    networkAdapters: [],
+    controllers: [],
+    transceivers: [],
 });
 
 const createDefaultNodeTarget = (): NodePlanningTarget => ({
@@ -203,6 +220,60 @@ export const useBuildStore = create<BuildStore>()(persist((set) => ({
         },
     })),
 
+    addNodeController: (nodeIndex, controller) => set((state) => ({
+        build: {
+            ...state.build,
+            nodes: state.build.nodes.map((node, idx) =>
+                idx === nodeIndex
+                    ? { ...node, controllers: [...(node.controllers ?? []), controller] }
+                    : node
+            ),
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    removeNodeController: (nodeIndex, controllerIndex) => set((state) => ({
+        build: {
+            ...state.build,
+            nodes: state.build.nodes.map((node, idx) =>
+                idx === nodeIndex
+                    ? {
+                        ...node,
+                        controllers: (node.controllers ?? []).filter((_, i) => i !== controllerIndex),
+                    }
+                    : node
+            ),
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    addNodeNetworkAdapter: (nodeIndex, networkAdapter) => set((state) => ({
+        build: {
+            ...state.build,
+            nodes: state.build.nodes.map((node, idx) =>
+                idx === nodeIndex
+                    ? { ...node, networkAdapters: [...(node.networkAdapters ?? []), networkAdapter] }
+                    : node
+            ),
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
+    removeNodeNetworkAdapter: (nodeIndex, networkAdapterIndex) => set((state) => ({
+        build: {
+            ...state.build,
+            nodes: state.build.nodes.map((node, idx) =>
+                idx === nodeIndex
+                    ? {
+                        ...node,
+                        networkAdapters: (node.networkAdapters ?? []).filter((_, i) => i !== networkAdapterIndex),
+                    }
+                    : node
+            ),
+            updatedAt: new Date().toISOString(),
+        },
+    })),
+
     setPriceOverride: (itemKey, price) => set((state) => {
         const nextOverrides = { ...state.priceOverrides };
         if (price === undefined || Number.isNaN(price) || price < 0) {
@@ -275,6 +346,28 @@ export const useBuildStore = create<BuildStore>()(persist((set) => ({
         priceOverrides: {},
         customCosts: [],
     }),
+
+    loadSharedBundle: (bundle) => set(() => {
+        const build = {
+            ...bundle.build,
+            shareCode: bundle.shareCode ?? bundle.build.shareCode,
+        };
+        const nodes = build.nodes ?? [];
+        return {
+            build,
+            priceOverrides: bundle.priceOverrides ?? {},
+            customCosts: bundle.customCosts ?? [],
+            nodeTargets: normalizeNodeTargets(nodes, bundle.nodeTargets),
+        };
+    }),
+
+    setBuildShareCode: (shareCode) => set((state) => ({
+        build: {
+            ...state.build,
+            shareCode,
+            updatedAt: new Date().toISOString(),
+        },
+    })),
 }), {
     name: 'server-part-picker-build-v1',
     version: 2,

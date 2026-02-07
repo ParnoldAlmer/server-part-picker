@@ -2,10 +2,15 @@ import { useMemo, useState } from 'react';
 import type {
     BayFormFactor,
     BayInterface,
+    ControllerCard,
+    ControllerConnector,
+    ControllerType,
     CPU,
     Memory,
     MemoryGen,
     MemoryType,
+    NetworkAdapter,
+    NetworkConnectorType,
     Platform,
     SocketType,
     Storage,
@@ -15,11 +20,13 @@ import { cn } from '../lib/utils';
 import cpuData from '../../../backend/src/data/cpus.json';
 import memoryData from '../../../backend/src/data/memory.json';
 import storageData from '../../../backend/src/data/storage.json';
+import networkAdaptersData from '../../../backend/src/data/networkAdapters.json';
+import controllersData from '../../../backend/src/data/controllers.json';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Trash2 } from 'lucide-react';
 
-export type ComponentType = 'cpus' | 'memory' | 'storage';
+export type ComponentType = 'cpus' | 'memory' | 'storage' | 'network' | 'controllers';
 
 interface PartBrowserProps {
     nodeIndex: number;
@@ -67,12 +74,41 @@ interface StorageFormState {
     msrp: string;
 }
 
+interface NetworkFormState {
+    vendor: string;
+    name: string;
+    sku: string;
+    connector: NetworkConnectorType;
+    speedGbps: string;
+    portCount: string;
+    ocp3Compatible: boolean;
+    requiresTransceiver: boolean;
+    msrp: string;
+}
+
+interface ControllerFormState {
+    vendor: string;
+    name: string;
+    sku: string;
+    type: ControllerType;
+    pcieGen: string;
+    pcieLanes: string;
+    connector: ControllerConnector;
+    connectorCount: string;
+    interface: BayInterface;
+    maxDrives: string;
+    msrp: string;
+}
+
 const SOCKET_OPTIONS: SocketType[] = ['LGA4677', 'SP5', 'LGA4094', 'LGA4926'];
 const MEMORY_TYPE_OPTIONS: MemoryType[] = ['RDIMM', 'LRDIMM', 'ECC-UDIMM', 'UDIMM'];
 const MEMORY_GEN_OPTIONS: MemoryGen[] = [4, 5];
 const STORAGE_TYPE_OPTIONS: Storage['type'][] = ['SSD', 'HDD', 'NVMe'];
 const BAY_FORM_FACTOR_OPTIONS: BayFormFactor[] = ['2.5"', '3.5"', 'E1.S', 'E1.L', 'E3.S', 'E3.L', 'M.2', 'U.2', 'U.3'];
 const BAY_INTERFACE_OPTIONS: BayInterface[] = ['SATA', 'SAS', 'NVMe'];
+const NETWORK_CONNECTOR_OPTIONS: NetworkConnectorType[] = ['RJ45', 'SFP+', 'SFP28', 'QSFP28', 'OCP3.0'];
+const CONTROLLER_TYPE_OPTIONS: ControllerType[] = ['HBA', 'RAID', 'Tri-Mode'];
+const CONTROLLER_CONNECTOR_OPTIONS: ControllerConnector[] = ['SFF-8643', 'SFF-8654', 'SlimSAS', 'OCuLink', 'U.2'];
 
 const INITIAL_CPU_FORM: CpuFormState = {
     vendor: '',
@@ -114,6 +150,32 @@ const INITIAL_STORAGE_FORM: StorageFormState = {
     msrp: '0',
 };
 
+const INITIAL_NETWORK_FORM: NetworkFormState = {
+    vendor: '',
+    name: '',
+    sku: '',
+    connector: 'SFP28',
+    speedGbps: '25',
+    portCount: '2',
+    ocp3Compatible: true,
+    requiresTransceiver: true,
+    msrp: '0',
+};
+
+const INITIAL_CONTROLLER_FORM: ControllerFormState = {
+    vendor: '',
+    name: '',
+    sku: '',
+    type: 'HBA',
+    pcieGen: '4',
+    pcieLanes: '8',
+    connector: 'SFF-8643',
+    connectorCount: '2',
+    interface: 'SAS',
+    maxDrives: '8',
+    msrp: '0',
+};
+
 const parsePositiveInt = (value: string, fallback = 0) => {
     const parsed = Number.parseInt(value, 10);
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
@@ -139,28 +201,40 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
     const [cpuForm, setCpuForm] = useState<CpuFormState>(INITIAL_CPU_FORM);
     const [memoryForm, setMemoryForm] = useState<MemoryFormState>(INITIAL_MEMORY_FORM);
     const [storageForm, setStorageForm] = useState<StorageFormState>(INITIAL_STORAGE_FORM);
+    const [networkForm, setNetworkForm] = useState<NetworkFormState>(INITIAL_NETWORK_FORM);
+    const [controllerForm, setControllerForm] = useState<ControllerFormState>(INITIAL_CONTROLLER_FORM);
     const [formError, setFormError] = useState<string | null>(null);
 
     const defaultCpus = useMemo(() => cpuData as CPU[], []);
     const defaultMemory = useMemo(() => memoryData as Memory[], []);
     const defaultStorage = useMemo(() => storageData as Storage[], []);
+    const defaultNetworkAdapters = useMemo(() => networkAdaptersData as NetworkAdapter[], []);
+    const defaultControllers = useMemo(() => controllersData as ControllerCard[], []);
 
     const [customCpus, setCustomCpus] = useLocalStorage<CPU[]>('parts_custom_cpu_v1', []);
     const [customMemory, setCustomMemory] = useLocalStorage<Memory[]>('parts_custom_memory_v1', []);
     const [customStorage, setCustomStorage] = useLocalStorage<Storage[]>('parts_custom_storage_v1', []);
+    const [customNetworkAdapters, setCustomNetworkAdapters] = useLocalStorage<NetworkAdapter[]>('parts_custom_network_v1', []);
+    const [customControllers, setCustomControllers] = useLocalStorage<ControllerCard[]>('parts_custom_controller_v1', []);
 
     const [hiddenCpuIds, setHiddenCpuIds] = useLocalStorage<string[]>('parts_hidden_cpu_v1', []);
     const [hiddenMemoryIds, setHiddenMemoryIds] = useLocalStorage<string[]>('parts_hidden_memory_v1', []);
     const [hiddenStorageIds, setHiddenStorageIds] = useLocalStorage<string[]>('parts_hidden_storage_v1', []);
+    const [hiddenNetworkIds, setHiddenNetworkIds] = useLocalStorage<string[]>('parts_hidden_network_v1', []);
+    const [hiddenControllerIds, setHiddenControllerIds] = useLocalStorage<string[]>('parts_hidden_controller_v1', []);
 
     const {
         build,
         addNodeCPU,
         addNodeMemory,
         addNodeStorage,
+        addNodeController,
+        addNodeNetworkAdapter,
         removeNodeCPU,
         removeNodeMemory,
         removeNodeStorage,
+        removeNodeController,
+        removeNodeNetworkAdapter,
     } = useBuildStore();
 
     const node = build.nodes[nodeIndex];
@@ -176,6 +250,14 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
         () => [...defaultStorage.filter((drive) => !hiddenStorageIds.includes(drive.id)), ...customStorage],
         [defaultStorage, hiddenStorageIds, customStorage]
     );
+    const visibleNetworkAdapters = useMemo(
+        () => [...defaultNetworkAdapters.filter((nic) => !hiddenNetworkIds.includes(nic.id)), ...customNetworkAdapters],
+        [defaultNetworkAdapters, hiddenNetworkIds, customNetworkAdapters]
+    );
+    const visibleControllers = useMemo(
+        () => [...defaultControllers.filter((controller) => !hiddenControllerIds.includes(controller.id)), ...customControllers],
+        [defaultControllers, hiddenControllerIds, customControllers]
+    );
 
     const cpus = useMemo(() => {
         if (platformFilter === 'all') return visibleCpus;
@@ -185,6 +267,8 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
     const handleAddCPU = (cpu: CPU) => addNodeCPU(nodeIndex, cpu);
     const handleAddMemory = (mem: Memory) => addNodeMemory(nodeIndex, mem);
     const handleAddStorage = (stg: Storage) => addNodeStorage(nodeIndex, stg);
+    const handleAddController = (controller: ControllerCard) => addNodeController(nodeIndex, controller);
+    const handleAddNetworkAdapter = (nic: NetworkAdapter) => addNodeNetworkAdapter(nodeIndex, nic);
 
     const handleDeleteCpu = (cpu: CPU) => {
         if (cpu.id.startsWith('custom-cpu-')) {
@@ -213,6 +297,26 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
         }
         if (!hiddenStorageIds.includes(drive.id)) {
             setHiddenStorageIds((prev) => [...prev, drive.id]);
+        }
+    };
+
+    const handleDeleteNetworkAdapter = (nic: NetworkAdapter) => {
+        if (nic.id.startsWith('custom-network-')) {
+            setCustomNetworkAdapters((prev) => prev.filter((item) => item.id !== nic.id));
+            return;
+        }
+        if (!hiddenNetworkIds.includes(nic.id)) {
+            setHiddenNetworkIds((prev) => [...prev, nic.id]);
+        }
+    };
+
+    const handleDeleteController = (controller: ControllerCard) => {
+        if (controller.id.startsWith('custom-controller-')) {
+            setCustomControllers((prev) => prev.filter((item) => item.id !== controller.id));
+            return;
+        }
+        if (!hiddenControllerIds.includes(controller.id)) {
+            setHiddenControllerIds((prev) => [...prev, controller.id]);
         }
     };
 
@@ -281,6 +385,73 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
             return;
         }
 
+        if (selectedType === 'network') {
+            if (!networkForm.vendor.trim() || !networkForm.name.trim()) {
+                setFormError('Network adapter vendor and name are required.');
+                return;
+            }
+
+            const newNetworkAdapter: NetworkAdapter = {
+                id: `custom-network-${uuidv4()}`,
+                sku: networkForm.sku.trim() || 'Custom NIC',
+                vendor: networkForm.vendor.trim(),
+                name: networkForm.name.trim(),
+                constraints: {
+                    ports: [
+                        {
+                            connector: networkForm.connector,
+                            speedGbps: Math.max(1, parsePositiveInt(networkForm.speedGbps, 1)),
+                            count: Math.max(1, parsePositiveInt(networkForm.portCount, 1)),
+                        },
+                    ],
+                    ocp3Compatible: networkForm.ocp3Compatible,
+                    requiresTransceiver: networkForm.requiresTransceiver,
+                },
+                msrp: parsePositiveFloat(networkForm.msrp, 0),
+                currency: 'USD',
+                lastUpdated: new Date().toISOString().slice(0, 10),
+            };
+            setCustomNetworkAdapters((prev) => [...prev, newNetworkAdapter]);
+            setNetworkForm(INITIAL_NETWORK_FORM);
+            setShowCustomForm(false);
+            return;
+        }
+
+        if (selectedType === 'controllers') {
+            if (!controllerForm.vendor.trim() || !controllerForm.name.trim()) {
+                setFormError('Controller vendor and name are required.');
+                return;
+            }
+
+            const newController: ControllerCard = {
+                id: `custom-controller-${uuidv4()}`,
+                sku: controllerForm.sku.trim() || 'Custom Controller',
+                vendor: controllerForm.vendor.trim(),
+                name: controllerForm.name.trim(),
+                constraints: {
+                    type: controllerForm.type,
+                    pcieGen: Math.max(1, parsePositiveInt(controllerForm.pcieGen, 1)),
+                    pcieLanes: Math.max(1, parsePositiveInt(controllerForm.pcieLanes, 1)),
+                    ports: [
+                        {
+                            connector: controllerForm.connector,
+                            count: Math.max(1, parsePositiveInt(controllerForm.connectorCount, 1)),
+                            lanesPerPort: 4,
+                            interface: controllerForm.interface,
+                        },
+                    ],
+                    maxDrives: Math.max(1, parsePositiveInt(controllerForm.maxDrives, 1)),
+                },
+                msrp: parsePositiveFloat(controllerForm.msrp, 0),
+                currency: 'USD',
+                lastUpdated: new Date().toISOString().slice(0, 10),
+            };
+            setCustomControllers((prev) => [...prev, newController]);
+            setControllerForm(INITIAL_CONTROLLER_FORM);
+            setShowCustomForm(false);
+            return;
+        }
+
         if (!storageForm.vendor.trim() || !storageForm.name.trim()) {
             setFormError('Storage vendor and name are required.');
             return;
@@ -312,7 +483,11 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
             ? hiddenCpuIds.length
             : selectedType === 'memory'
                 ? hiddenMemoryIds.length
-                : hiddenStorageIds.length;
+                : selectedType === 'storage'
+                    ? hiddenStorageIds.length
+                    : selectedType === 'network'
+                        ? hiddenNetworkIds.length
+                        : hiddenControllerIds.length;
 
     return (
         <div className="space-y-4">
@@ -362,6 +537,36 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
                 >
                     Storage
                 </button>
+                <button
+                    onClick={() => {
+                        setSelectedType('network');
+                        setShowCustomForm(false);
+                        setFormError(null);
+                    }}
+                    className={cn(
+                        'px-4 py-2 font-medium transition-colors border-b-2',
+                        selectedType === 'network'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-slate-200'
+                    )}
+                >
+                    Networking
+                </button>
+                <button
+                    onClick={() => {
+                        setSelectedType('controllers');
+                        setShowCustomForm(false);
+                        setFormError(null);
+                    }}
+                    className={cn(
+                        'px-4 py-2 font-medium transition-colors border-b-2',
+                        selectedType === 'controllers'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-slate-400 hover:text-slate-200'
+                    )}
+                >
+                    Controllers
+                </button>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -373,7 +578,17 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
                     className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
                 >
                     <Plus size={14} />
-                    Add Custom {selectedType === 'cpus' ? 'CPU' : selectedType === 'memory' ? 'Memory' : 'Storage'}
+                    Add Custom {
+                        selectedType === 'cpus'
+                            ? 'CPU'
+                            : selectedType === 'memory'
+                                ? 'Memory'
+                                : selectedType === 'storage'
+                                    ? 'Storage'
+                                    : selectedType === 'network'
+                                        ? 'Network Adapter'
+                                        : 'Controller/HBA'
+                    }
                 </button>
                 {hiddenCount > 0 && (
                     <button
@@ -381,6 +596,8 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
                             if (selectedType === 'cpus') setHiddenCpuIds([]);
                             if (selectedType === 'memory') setHiddenMemoryIds([]);
                             if (selectedType === 'storage') setHiddenStorageIds([]);
+                            if (selectedType === 'network') setHiddenNetworkIds([]);
+                            if (selectedType === 'controllers') setHiddenControllerIds([]);
                         }}
                         className="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded text-sm"
                     >
@@ -413,7 +630,17 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
             {showCustomForm && (
                 <div className="rounded border border-slate-700 bg-slate-800 p-4 space-y-3">
                     <h4 className="font-semibold">
-                        New Custom {selectedType === 'cpus' ? 'CPU' : selectedType === 'memory' ? 'Memory' : 'Storage'}
+                        New Custom {
+                            selectedType === 'cpus'
+                                ? 'CPU'
+                                : selectedType === 'memory'
+                                    ? 'Memory'
+                                    : selectedType === 'storage'
+                                        ? 'Storage'
+                                        : selectedType === 'network'
+                                            ? 'Network Adapter'
+                                            : 'Controller/HBA'
+                        }
                     </h4>
                     {formError && <p className="text-sm text-red-400">{formError}</p>}
 
@@ -478,6 +705,60 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
                             <input type="number" min={0.01} step="0.01" value={storageForm.capacityTB} onChange={(e) => setStorageForm({ ...storageForm, capacityTB: e.target.value })} placeholder="Capacity (TB)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
                             <input type="number" min={0} value={storageForm.tdpW} onChange={(e) => setStorageForm({ ...storageForm, tdpW: e.target.value })} placeholder="TDP (W)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
                             <input type="number" min={0} step="0.01" value={storageForm.msrp} onChange={(e) => setStorageForm({ ...storageForm, msrp: e.target.value })} placeholder="MSRP" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                        </div>
+                    )}
+
+                    {selectedType === 'network' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input value={networkForm.vendor} onChange={(e) => setNetworkForm({ ...networkForm, vendor: e.target.value })} placeholder="Vendor" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={networkForm.name} onChange={(e) => setNetworkForm({ ...networkForm, name: e.target.value })} placeholder="Name" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={networkForm.sku} onChange={(e) => setNetworkForm({ ...networkForm, sku: e.target.value })} placeholder="SKU" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={networkForm.connector} onChange={(e) => setNetworkForm({ ...networkForm, connector: e.target.value as NetworkConnectorType })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {NETWORK_CONNECTOR_OPTIONS.map((connector) => <option key={connector} value={connector}>{connector}</option>)}
+                            </select>
+                            <input type="number" min={1} value={networkForm.speedGbps} onChange={(e) => setNetworkForm({ ...networkForm, speedGbps: e.target.value })} placeholder="Port Speed (Gbps)" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={1} value={networkForm.portCount} onChange={(e) => setNetworkForm({ ...networkForm, portCount: e.target.value })} placeholder="Port Count" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <label className="flex items-center gap-2 text-sm text-slate-300 px-2 py-1">
+                                <input
+                                    type="checkbox"
+                                    checked={networkForm.ocp3Compatible}
+                                    onChange={(e) => setNetworkForm({ ...networkForm, ocp3Compatible: e.target.checked })}
+                                    className="w-4 h-4"
+                                />
+                                OCP 3.0 Compatible
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-slate-300 px-2 py-1">
+                                <input
+                                    type="checkbox"
+                                    checked={networkForm.requiresTransceiver}
+                                    onChange={(e) => setNetworkForm({ ...networkForm, requiresTransceiver: e.target.checked })}
+                                    className="w-4 h-4"
+                                />
+                                Requires Transceiver
+                            </label>
+                            <input type="number" min={0} step="0.01" value={networkForm.msrp} onChange={(e) => setNetworkForm({ ...networkForm, msrp: e.target.value })} placeholder="MSRP" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                        </div>
+                    )}
+
+                    {selectedType === 'controllers' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <input value={controllerForm.vendor} onChange={(e) => setControllerForm({ ...controllerForm, vendor: e.target.value })} placeholder="Vendor" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={controllerForm.name} onChange={(e) => setControllerForm({ ...controllerForm, name: e.target.value })} placeholder="Name" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input value={controllerForm.sku} onChange={(e) => setControllerForm({ ...controllerForm, sku: e.target.value })} placeholder="SKU" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={controllerForm.type} onChange={(e) => setControllerForm({ ...controllerForm, type: e.target.value as ControllerType })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {CONTROLLER_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                            </select>
+                            <input type="number" min={1} value={controllerForm.pcieGen} onChange={(e) => setControllerForm({ ...controllerForm, pcieGen: e.target.value })} placeholder="PCIe Gen" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={1} value={controllerForm.pcieLanes} onChange={(e) => setControllerForm({ ...controllerForm, pcieLanes: e.target.value })} placeholder="PCIe Lanes" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={controllerForm.connector} onChange={(e) => setControllerForm({ ...controllerForm, connector: e.target.value as ControllerConnector })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {CONTROLLER_CONNECTOR_OPTIONS.map((connector) => <option key={connector} value={connector}>{connector}</option>)}
+                            </select>
+                            <input type="number" min={1} value={controllerForm.connectorCount} onChange={(e) => setControllerForm({ ...controllerForm, connectorCount: e.target.value })} placeholder="Connector Count" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <select value={controllerForm.interface} onChange={(e) => setControllerForm({ ...controllerForm, interface: e.target.value as BayInterface })} className="bg-slate-950 border border-slate-700 rounded px-2 py-1">
+                                {BAY_INTERFACE_OPTIONS.map((iface) => <option key={iface} value={iface}>{iface}</option>)}
+                            </select>
+                            <input type="number" min={1} value={controllerForm.maxDrives} onChange={(e) => setControllerForm({ ...controllerForm, maxDrives: e.target.value })} placeholder="Max Drives" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
+                            <input type="number" min={0} step="0.01" value={controllerForm.msrp} onChange={(e) => setControllerForm({ ...controllerForm, msrp: e.target.value })} placeholder="MSRP" className="bg-slate-950 border border-slate-700 rounded px-2 py-1" />
                         </div>
                     )}
 
@@ -745,6 +1026,191 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
                                         <button
                                             onClick={() => handleAddStorage(stg)}
                                             className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+
+                {selectedType === 'controllers' && visibleControllers.map((controller) => {
+                    const nodeControllers = node.controllers ?? [];
+                    const selectedCount = nodeControllers.filter((selected) => selected.id === controller.id).length;
+                    const maxPcieCards = node.motherboard?.constraints.pcie.slots.length;
+                    const slotsFull = maxPcieCards !== undefined && nodeControllers.length >= maxPcieCards;
+                    const connectorSummary = controller.constraints.ports
+                        .map((port) => `${port.count}x ${port.connector} (${port.interface})`)
+                        .join(', ');
+                    const limitedBySlots = slotsFull && selectedCount === 0;
+
+                    return (
+                        <div
+                            key={controller.id}
+                            className={cn(
+                                'p-4 rounded-lg border transition-all',
+                                limitedBySlots
+                                    ? 'border-slate-800 bg-slate-900 opacity-60'
+                                    : selectedCount > 0
+                                        ? 'border-green-700 bg-green-950/30'
+                                        : 'border-slate-700 bg-slate-800 hover:border-blue-600'
+                            )}
+                        >
+                            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold">{controller.name}</h4>
+                                    <p className="text-sm text-slate-400 break-words">{controller.vendor} • {controller.sku}</p>
+                                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                        <span className="text-slate-300">{controller.constraints.type}</span>
+                                        <span className="text-slate-400">PCIe Gen{controller.constraints.pcieGen} x{controller.constraints.pcieLanes}</span>
+                                        <span className="text-slate-400">{connectorSummary}</span>
+                                    </div>
+                                    {limitedBySlots && (
+                                        <p className="mt-2 text-xs text-amber-500">
+                                            ⚠️ PCIe slots full ({nodeControllers.length}/{maxPcieCards}).
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
+                                    <div className="flex items-center gap-2">
+                                        {controller.msrp !== undefined && (
+                                            <span className="text-blue-400 font-semibold">
+                                                ${controller.msrp.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => handleDeleteController(controller)}
+                                            className="p-1 text-red-400 hover:text-red-300"
+                                            title="Delete from catalog"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const idx = nodeControllers.findIndex((selected) => selected.id === controller.id);
+                                                if (idx !== -1) removeNodeController(nodeIndex, idx);
+                                            }}
+                                            disabled={selectedCount === 0}
+                                            className={cn(
+                                                'px-2 py-1 rounded text-sm',
+                                                selectedCount === 0
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-red-600 hover:bg-red-700'
+                                            )}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-6 text-center text-sm font-medium">{selectedCount}</span>
+                                        <button
+                                            onClick={() => handleAddController(controller)}
+                                            disabled={limitedBySlots}
+                                            className={cn(
+                                                'px-2 py-1 rounded text-sm',
+                                                limitedBySlots
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-blue-600 hover:bg-blue-700'
+                                            )}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+
+                {selectedType === 'network' && visibleNetworkAdapters.map((nic) => {
+                    const nodeNetworkAdapters = node.networkAdapters ?? [];
+                    const selectedCount = nodeNetworkAdapters.filter((adapter) => adapter.id === nic.id).length;
+                    const selectedOcpCards = nodeNetworkAdapters.filter((adapter) => adapter.constraints.ocp3Compatible).length;
+                    const ocpSlotsAvailable = build.chassis?.constraints.nodes[nodeIndex]?.ocp3Slots ?? 0;
+                    const ocpSlotsFull = nic.constraints.ocp3Compatible && selectedOcpCards >= ocpSlotsAvailable;
+                    const ocpUnsupported = nic.constraints.ocp3Compatible && ocpSlotsAvailable === 0;
+                    const isCompatible = !nic.constraints.ocp3Compatible || !ocpSlotsFull;
+
+                    return (
+                        <div
+                            key={nic.id}
+                            className={cn(
+                                'p-4 rounded-lg border transition-all',
+                                !isCompatible
+                                    ? 'border-slate-800 bg-slate-900 opacity-60'
+                                    : selectedCount > 0
+                                        ? 'border-green-700 bg-green-950/30'
+                                        : 'border-slate-700 bg-slate-800 hover:border-blue-600'
+                            )}
+                        >
+                            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold">{nic.name}</h4>
+                                    <p className="text-sm text-slate-400 break-words">{nic.vendor} • {nic.sku}</p>
+                                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                        {nic.constraints.ports.map((port, idx) => (
+                                            <span key={`${nic.id}-port-${idx}`} className="text-slate-400">
+                                                {port.count}x {port.connector} {port.speedGbps}GbE
+                                            </span>
+                                        ))}
+                                        {nic.constraints.ocp3Compatible && (
+                                            <span className="text-cyan-400">OCP 3.0</span>
+                                        )}
+                                    </div>
+                                    {ocpUnsupported && (
+                                        <p className="mt-2 text-xs text-red-400">
+                                            ⚠️ Chassis node has no OCP 3.0 slot configured.
+                                        </p>
+                                    )}
+                                    {!ocpUnsupported && ocpSlotsFull && (
+                                        <p className="mt-2 text-xs text-amber-500">
+                                            ⚠️ OCP 3.0 slots full ({selectedOcpCards}/{ocpSlotsAvailable}).
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
+                                    <div className="flex items-center gap-2">
+                                        {nic.msrp !== undefined && (
+                                            <span className="text-blue-400 font-semibold">
+                                                ${nic.msrp.toLocaleString()}
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={() => handleDeleteNetworkAdapter(nic)}
+                                            className="p-1 text-red-400 hover:text-red-300"
+                                            title="Delete from catalog"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const idx = nodeNetworkAdapters.findIndex((adapter) => adapter.id === nic.id);
+                                                if (idx !== -1) removeNodeNetworkAdapter(nodeIndex, idx);
+                                            }}
+                                            disabled={selectedCount === 0}
+                                            className={cn(
+                                                'px-2 py-1 rounded text-sm',
+                                                selectedCount === 0
+                                                    ? 'bg-slate-700 cursor-not-allowed'
+                                                    : 'bg-red-600 hover:bg-red-700'
+                                            )}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-6 text-center text-sm font-medium">{selectedCount}</span>
+                                        <button
+                                            onClick={() => handleAddNetworkAdapter(nic)}
+                                            disabled={!isCompatible}
+                                            className={cn(
+                                                'px-2 py-1 rounded text-sm',
+                                                isCompatible
+                                                    ? 'bg-blue-600 hover:bg-blue-700'
+                                                    : 'bg-slate-700 cursor-not-allowed'
+                                            )}
                                         >
                                             +
                                         </button>

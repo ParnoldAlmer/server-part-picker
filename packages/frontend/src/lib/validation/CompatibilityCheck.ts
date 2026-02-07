@@ -358,6 +358,34 @@ const evaluateNodeConstraints = (build: Build, graph: ConstraintGraph): Validati
                     message: `Drive requires PCIe bifurcation mode ${drive.constraints.requiredBifurcationMode}, which is unavailable on the selected motherboard.`,
                 });
             }
+
+            if (drive.constraints.requiredControllerTypes && drive.constraints.requiredControllerTypes.length > 0) {
+                const hasMatchingType = controllers.some((controller) =>
+                    drive.constraints.requiredControllerTypes?.includes(controller.constraints.type)
+                );
+                if (!hasMatchingType) {
+                    issues.push({
+                        code: 'STORAGE_CONTROLLER_TYPE_REQUIRED',
+                        severity: 'error',
+                        path: `nodes[${nodeIndex}].storage[${driveIndex}]`,
+                        message: `Drive requires controller type ${drive.constraints.requiredControllerTypes.join(', ')}.`,
+                    });
+                }
+            }
+
+            if (drive.constraints.requiredControllerConnector) {
+                const hasRequiredConnector = controllers.some((controller) =>
+                    controller.constraints.ports.some((port) => port.connector === drive.constraints.requiredControllerConnector)
+                );
+                if (!hasRequiredConnector) {
+                    issues.push({
+                        code: 'STORAGE_CONTROLLER_CONNECTOR_REQUIRED',
+                        severity: 'error',
+                        path: `nodes[${nodeIndex}].storage[${driveIndex}]`,
+                        message: `Drive requires controller connector ${drive.constraints.requiredControllerConnector}.`,
+                    });
+                }
+            }
         });
 
         if (build.chassis?.constraints.backplanes && build.chassis.constraints.backplanes.length > 0) {
@@ -410,6 +438,16 @@ const evaluateNodeConstraints = (build: Build, graph: ConstraintGraph): Validati
                 });
             });
 
+            const totalMaxDrives = controllers.reduce((sum, controller) => sum + (controller.constraints.maxDrives ?? 0), 0);
+            if (totalMaxDrives > 0 && storage.length > totalMaxDrives) {
+                issues.push({
+                    code: 'CONTROLLER_DRIVE_LIMIT_EXCEEDED',
+                    severity: 'error',
+                    path: `nodes[${nodeIndex}].storage`,
+                    message: `Selected controllers support ${totalMaxDrives} drives total, but ${storage.length} drives are configured.`,
+                });
+            }
+
             Object.entries(connectorDemand).forEach(([key, demandPortCount]) => {
                 const required = Math.ceil(demandPortCount);
                 const available = connectorSupply[key] ?? 0;
@@ -425,6 +463,17 @@ const evaluateNodeConstraints = (build: Build, graph: ConstraintGraph): Validati
         }
 
         if (nics.length > 0) {
+            const ocpSlots = build.chassis?.constraints.nodes[nodeIndex]?.ocp3Slots ?? 0;
+            const ocpCards = nics.filter((nic) => nic.constraints.ocp3Compatible === true);
+            if (ocpCards.length > ocpSlots) {
+                issues.push({
+                    code: 'OCP3_SLOT_EXCEEDED',
+                    severity: 'error',
+                    path: `nodes[${nodeIndex}].networkAdapters`,
+                    message: `Selected ${ocpCards.length} OCP 3.0 card(s), but chassis node provides ${ocpSlots} OCP 3.0 slot(s).`,
+                });
+            }
+
             const switches = graph.all('switch').map((nodeEntry) => nodeEntry.value as SwitchPortProfile);
             nics.forEach((nic, nicIndex) => {
                 nic.constraints.ports.forEach((port) => {

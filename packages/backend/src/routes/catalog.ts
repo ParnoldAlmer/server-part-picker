@@ -14,12 +14,14 @@ const CATALOG_VERSION = '2026-02-04';
 async function loadCatalog() {
     const dataDir = join(__dirname, '../data');
 
-    const [chassis, cpus, motherboards, memory, storage] = await Promise.all([
+    const [chassis, cpus, motherboards, memory, storage, networkAdapters, controllers] = await Promise.all([
         readFile(join(dataDir, 'chassis.json'), 'utf-8').then(JSON.parse),
         readFile(join(dataDir, 'cpus.json'), 'utf-8').then(JSON.parse),
         readFile(join(dataDir, 'motherboards.json'), 'utf-8').then(JSON.parse),
         readFile(join(dataDir, 'memory.json'), 'utf-8').then(JSON.parse),
         readFile(join(dataDir, 'storage.json'), 'utf-8').then(JSON.parse),
+        readFile(join(dataDir, 'networkAdapters.json'), 'utf-8').then(JSON.parse).catch(() => []),
+        readFile(join(dataDir, 'controllers.json'), 'utf-8').then(JSON.parse).catch(() => []),
     ]);
 
     return {
@@ -30,6 +32,8 @@ async function loadCatalog() {
         motherboards,
         memory,
         storage,
+        networkAdapters,
+        controllers,
     };
 }
 
@@ -118,6 +122,47 @@ router.get('/storage', async (req, res) => {
         res.json(catalog.storage);
     } catch (error) {
         res.status(500).json({ error: 'Failed to load storage' });
+    }
+});
+
+// GET /api/catalog/network-adapters
+router.get('/network-adapters', async (req, res) => {
+    try {
+        const catalog = await loadCatalog();
+        const { connector } = req.query;
+
+        let filtered = catalog.networkAdapters;
+        if (connector) {
+            filtered = filtered.filter((nic: any) =>
+                (nic.constraints?.ports ?? []).some((port: any) => port.connector === connector)
+            );
+        }
+
+        res.json(filtered);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to load network adapters' });
+    }
+});
+
+// GET /api/catalog/controllers
+router.get('/controllers', async (req, res) => {
+    try {
+        const catalog = await loadCatalog();
+        const { type, connector } = req.query;
+
+        let filtered = catalog.controllers;
+        if (type) {
+            filtered = filtered.filter((controller: any) => controller.constraints?.type === type);
+        }
+        if (connector) {
+            filtered = filtered.filter((controller: any) =>
+                (controller.constraints?.ports ?? []).some((port: any) => port.connector === connector)
+            );
+        }
+
+        res.json(filtered);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to load controllers' });
     }
 });
 

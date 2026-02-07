@@ -196,6 +196,34 @@ export function BuildSummary() {
                 return acc;
             }, {})
         );
+        const controllerGroups = Object.values(
+            (node.controllers ?? []).reduce<Record<string, { id: string; item: string; qty: number; msrp: number }>>((acc, controller) => {
+                if (!acc[controller.id]) {
+                    acc[controller.id] = {
+                        id: controller.id,
+                        item: `${controller.vendor} ${controller.name}`,
+                        qty: 0,
+                        msrp: controller.msrp || 0,
+                    };
+                }
+                acc[controller.id].qty += 1;
+                return acc;
+            }, {})
+        );
+        const networkGroups = Object.values(
+            (node.networkAdapters ?? []).reduce<Record<string, { id: string; item: string; qty: number; msrp: number }>>((acc, nic) => {
+                if (!acc[nic.id]) {
+                    acc[nic.id] = {
+                        id: nic.id,
+                        item: `${nic.vendor} ${nic.name}`,
+                        qty: 0,
+                        msrp: nic.msrp || 0,
+                    };
+                }
+                acc[nic.id].qty += 1;
+                return acc;
+            }, {})
+        );
 
         cpuGroups.forEach((group) => {
             plannerRows.push({
@@ -230,6 +258,30 @@ export function BuildSummary() {
                 quantity: group.qty,
                 defaultUnitPrice: group.msrp,
                 overrideKey: getOverrideKey('storage', group.id),
+            });
+        });
+
+        controllerGroups.forEach((group) => {
+            plannerRows.push({
+                key: `controller-${nodeIdx}-${group.id}`,
+                category: 'Controller',
+                location: `Node ${nodeIdx + 1}`,
+                item: group.item,
+                quantity: group.qty,
+                defaultUnitPrice: group.msrp,
+                overrideKey: getOverrideKey('controller', group.id),
+            });
+        });
+
+        networkGroups.forEach((group) => {
+            plannerRows.push({
+                key: `network-${nodeIdx}-${group.id}`,
+                category: 'Networking',
+                location: `Node ${nodeIdx + 1}`,
+                item: group.item,
+                quantity: group.qty,
+                defaultUnitPrice: group.msrp,
+                overrideKey: getOverrideKey('network', group.id),
             });
         });
     });
@@ -291,6 +343,18 @@ export function BuildSummary() {
                                 <div className="bg-slate-900 rounded p-2">
                                     <span className="text-slate-400">Storage:</span>{' '}
                                     {node.storage.length}× Drives
+                                </div>
+                            )}
+                            {(node.controllers ?? []).length > 0 && (
+                                <div className="bg-slate-900 rounded p-2">
+                                    <span className="text-slate-400">Controllers:</span>{' '}
+                                    {(node.controllers ?? []).length}× Cards
+                                </div>
+                            )}
+                            {(node.networkAdapters ?? []).length > 0 && (
+                                <div className="bg-slate-900 rounded p-2">
+                                    <span className="text-slate-400">Networking:</span>{' '}
+                                    {(node.networkAdapters ?? []).length}× Cards
                                 </div>
                             )}
                         </div>

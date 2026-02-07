@@ -565,4 +565,77 @@ describe('Compatibility Graph Rule', () => {
         const issues = compatibilityGraphRule(build);
         expect(issues.some((issue) => issue.code === 'BACKPLANE_CONTROLLER_PORT_SHORTAGE')).toBe(true);
     });
+
+    it('enforces OCP 3.0 slot limits per node', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-compat-ocp',
+                sku: 'CHASSIS-COMPAT-OCP',
+                vendor: 'Test',
+                name: 'OCP Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [{ index: 0, moboFormFactors: ['EATX'], cpuCount: 2, ocp3Slots: 1 }],
+                    bays: [],
+                    psu: { maxWatts: 1200, count: 2, redundancy: true, redundancyMode: 'N+1' },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: {
+                        id: 'mobo-compat-ocp',
+                        sku: 'MOBO-COMPAT-OCP',
+                        vendor: 'Test',
+                        name: 'EATX board',
+                        formFactor: 'EATX',
+                        constraints: {
+                            socket: 'SP5',
+                            memory: {
+                                ddrGen: 5,
+                                dimmTypes: ['RDIMM'],
+                                socketsCount: 2,
+                                channelsPerSocket: 12,
+                                dimmsPerChannel: 1,
+                                maxPerDimmGB: 128,
+                                maxTotalGB: 3072,
+                            },
+                            pcie: { gen: 5, lanes: 128, slots: [] },
+                            storage: { headers: [], onboardSlots: [] },
+                        },
+                    },
+                    cpus: [],
+                    memory: [],
+                    storage: [],
+                    networkAdapters: [
+                        {
+                            id: 'nic-ocp-1',
+                            sku: 'NIC-OCP-1',
+                            vendor: 'Test',
+                            name: 'OCP NIC 1',
+                            constraints: {
+                                ports: [{ connector: 'SFP28', speedGbps: 25, count: 2 }],
+                                ocp3Compatible: true,
+                                requiresTransceiver: false,
+                            },
+                        },
+                        {
+                            id: 'nic-ocp-2',
+                            sku: 'NIC-OCP-2',
+                            vendor: 'Test',
+                            name: 'OCP NIC 2',
+                            constraints: {
+                                ports: [{ connector: 'SFP28', speedGbps: 25, count: 2 }],
+                                ocp3Compatible: true,
+                                requiresTransceiver: false,
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
+
+        const issues = compatibilityGraphRule(build);
+        expect(issues.some((issue) => issue.code === 'OCP3_SLOT_EXCEEDED')).toBe(true);
+    });
 });

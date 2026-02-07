@@ -21,7 +21,8 @@ export const PsuRedundancyModeSchema = z.enum(["N", "N+1", "2N"]);
 export const NodeConstraintsSchema = z.object({
     index: z.number(),
     moboFormFactors: z.array(MotherboardFormFactorSchema),
-    cpuCount: z.union([z.literal(1), z.literal(2), z.literal(4)])
+    cpuCount: z.union([z.literal(1), z.literal(2), z.literal(4)]),
+    ocp3Slots: z.number().optional(),
 });
 
 export const ChassisConstraintsSchema = z.object({

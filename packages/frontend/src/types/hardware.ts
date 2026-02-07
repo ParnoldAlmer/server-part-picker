@@ -116,6 +116,10 @@ export interface NodeConstraints {
     index: number;
     moboFormFactors: MotherboardFormFactor[];
     cpuCount: SocketCount;
+    /**
+     * Optional OCP 3.0 mezzanine slots per node.
+     */
+    ocp3Slots?: number;
 }
 
 // Constraints for Motherboard
@@ -374,6 +378,7 @@ export interface Build {
     id: string;
     schemaVersion: number;
     catalogVersion: string;
+    shareCode?: string;
     chassis: Chassis | null;
     nodes: Node[];
     fabricSwitches?: SwitchPortProfile[];

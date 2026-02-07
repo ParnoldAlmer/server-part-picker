@@ -22,6 +22,7 @@ interface ChassisFormState {
     formFactor: FormFactor;
     nodeCount: number;
     psuWatts: number;
+    ocp3SlotsPerNode: number;
     maxDimmsPerNode?: number;
     bayGroups: BayGroupInput[];
 }
@@ -33,6 +34,7 @@ const INITIAL_FORM_STATE: ChassisFormState = {
     formFactor: '1U',
     nodeCount: 1,
     psuWatts: 0,
+    ocp3SlotsPerNode: 0,
     bayGroups: [],
 };
 
@@ -108,6 +110,7 @@ export function ChassisSelector() {
         if (!formState.name) newErrors.name = "Model name is required";
         if (formState.nodeCount < 1) newErrors.nodeCount = "Must have at least 1 node";
         if (formState.psuWatts < 0) newErrors.psuWatts = "Watts cannot be negative";
+        if (formState.ocp3SlotsPerNode < 0) newErrors.ocp3SlotsPerNode = "OCP 3.0 slots cannot be negative";
 
         // Check duplicates (exclude the chassis being edited)
         const isDuplicate = visibleChassis.some(c =>
@@ -136,7 +139,8 @@ export function ChassisSelector() {
                 nodes: Array.from({ length: formState.nodeCount }).map((_, i) => ({
                     index: i,
                     moboFormFactors: ['EATX', 'ATX', 'Proprietary'], // Default to permissive
-                    cpuCount: 2 // Default to dual socket capable
+                    cpuCount: 2, // Default to dual socket capable
+                    ocp3Slots: formState.ocp3SlotsPerNode
                 })),
                 bays: formState.bayGroups.map(g => ({
                     count: g.count,
@@ -177,6 +181,7 @@ export function ChassisSelector() {
             formFactor: chassis.formFactor,
             nodeCount: chassis.constraints.nodes.length,
             psuWatts: chassis.constraints.psu.maxWatts,
+            ocp3SlotsPerNode: chassis.constraints.nodes[0]?.ocp3Slots ?? 0,
             maxDimmsPerNode: chassis.constraints.maxDimmsPerNode,
             bayGroups: chassis.constraints.bays.map(b => ({
                 count: b.count,
@@ -339,6 +344,20 @@ export function ChassisSelector() {
                                 placeholder="No Limit"
                             />
                             {errors.maxDimmsPerNode && <p className="text-sm text-red-500 mt-1">{errors.maxDimmsPerNode}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                                OCP 3.0 Slots/Node
+                            </label>
+                            <input
+                                type="number"
+                                min={0}
+                                value={formState.ocp3SlotsPerNode}
+                                onChange={e => setFormState({ ...formState, ocp3SlotsPerNode: parseInt(e.target.value) || 0 })}
+                                className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2"
+                                placeholder="0"
+                            />
+                            {errors.ocp3SlotsPerNode && <p className="text-sm text-red-500 mt-1">{errors.ocp3SlotsPerNode}</p>}
                         </div>
                     </div>
 
@@ -506,6 +525,10 @@ export function ChassisSelector() {
                                     <div className="flex justify-between">
                                         <span className="text-slate-400">PSU:</span>
                                         <span className="font-medium">{c.constraints.psu.maxWatts}W</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">OCP 3.0/Node:</span>
+                                        <span className="font-medium">{c.constraints.nodes[0]?.ocp3Slots ?? 0}</span>
                                     </div>
                                 </div>
                             </button>

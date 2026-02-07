@@ -13,6 +13,8 @@ export function NodeTabs() {
         removeNodeCPU,
         removeNodeMemory,
         removeNodeStorage,
+        removeNodeController,
+        removeNodeNetworkAdapter,
     } = useBuildStore();
     const [selectedNodeIndex, setSelectedNodeIndex] = useState(0);
     const [motherboards] = useState<Motherboard[]>(motherboardData as Motherboard[]);
@@ -89,6 +91,44 @@ export function NodeTabs() {
             return acc;
         }, {})
     );
+    const groupedControllers = Object.values(
+        (currentNode.controllers ?? []).reduce<Record<string, { id: string; name: string; summary: string; msrp?: number; qty: number; type: string }>>((acc, controller) => {
+            if (!acc[controller.id]) {
+                const connectorSummary = (controller.constraints.ports ?? [])
+                    .map((port) => `${port.count}x ${port.connector} (${port.interface})`)
+                    .join(', ');
+                acc[controller.id] = {
+                    id: controller.id,
+                    name: controller.name,
+                    summary: connectorSummary || 'Controller',
+                    msrp: controller.msrp,
+                    qty: 0,
+                    type: controller.constraints.type,
+                };
+            }
+            acc[controller.id].qty += 1;
+            return acc;
+        }, {})
+    );
+    const groupedNetworking = Object.values(
+        (currentNode.networkAdapters ?? []).reduce<Record<string, { id: string; name: string; summary: string; msrp?: number; qty: number; ocp3: boolean }>>((acc, nic) => {
+            if (!acc[nic.id]) {
+                const portSummary = (nic.constraints.ports ?? [])
+                    .map((port) => `${port.count}x ${port.connector} ${port.speedGbps}GbE`)
+                    .join(', ');
+                acc[nic.id] = {
+                    id: nic.id,
+                    name: nic.name,
+                    summary: portSummary || 'Network adapter',
+                    msrp: nic.msrp,
+                    qty: 0,
+                    ocp3: nic.constraints.ocp3Compatible ?? false,
+                };
+            }
+            acc[nic.id].qty += 1;
+            return acc;
+        }, {})
+    );
     const motherboardPrice = currentNode.motherboard
         ? getDisplayPrice('motherboard', currentNode.motherboard.id, currentNode.motherboard.msrp)
         : undefined;
@@ -104,6 +144,14 @@ export function NodeTabs() {
         (sum, drive) => sum + ((getDisplayPrice('storage', drive.id, drive.msrp) ?? 0) * drive.qty),
         0
     );
+    const controllerTotalPrice = groupedControllers.reduce(
+        (sum, controller) => sum + ((getDisplayPrice('controller', controller.id, controller.msrp) ?? 0) * controller.qty),
+        0
+    );
+    const networkingTotalPrice = groupedNetworking.reduce(
+        (sum, nic) => sum + ((getDisplayPrice('network', nic.id, nic.msrp) ?? 0) * nic.qty),
+        0
+    );
     const cpuSummary = groupedCpus.length > 0
         ? `${groupedCpus[0].qty}x ${groupedCpus[0].name}${groupedCpus.length > 1 ? ` +${groupedCpus.length - 1} more` : ''}`
         : 'No CPU selected';
@@ -113,6 +161,12 @@ export function NodeTabs() {
     const storageSummary = groupedStorage.length > 0
         ? `${currentNode.storage.length} drive${currentNode.storage.length > 1 ? 's' : ''}`
         : 'No storage selected';
+    const controllerSummary = groupedControllers.length > 0
+        ? `${(currentNode.controllers ?? []).length} card${(currentNode.controllers ?? []).length > 1 ? 's' : ''}`
+        : 'No controller selected';
+    const networkingSummary = groupedNetworking.length > 0
+        ? `${(currentNode.networkAdapters ?? []).length} card${(currentNode.networkAdapters ?? []).length > 1 ? 's' : ''}`
+        : 'No network card selected';
     const chooseButtonClass = 'h-8 px-3 rounded-md text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 whitespace-nowrap';
     const partRows: Array<{
         key: string;
@@ -158,6 +212,24 @@ export function NodeTabs() {
             price: storageTotalPrice > 0 ? storageTotalPrice : undefined,
             actionLabel: 'Choose Storage',
             onChoose: () => focusPartPicker('storage'),
+        },
+        {
+            key: 'controllers',
+            component: 'Controllers / HBA',
+            selection: controllerSummary,
+            qty: (currentNode.controllers ?? []).length,
+            price: controllerTotalPrice > 0 ? controllerTotalPrice : undefined,
+            actionLabel: 'Choose Controller',
+            onChoose: () => focusPartPicker('controllers'),
+        },
+        {
+            key: 'network',
+            component: 'Networking',
+            selection: networkingSummary,
+            qty: (currentNode.networkAdapters ?? []).length,
+            price: networkingTotalPrice > 0 ? networkingTotalPrice : undefined,
+            actionLabel: 'Choose Network',
+            onChoose: () => focusPartPicker('network'),
         },
     ];
 
@@ -409,6 +481,64 @@ export function NodeTabs() {
                                             onClick={() => {
                                                 const idx = currentNode.storage.findIndex((selected) => selected.id === drive.id);
                                                 if (idx !== -1) removeNodeStorage(selectedNodeIndex, idx);
+                                            }}
+                                            className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded"
+                                        >
+                                            Remove 1
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {(currentNode.controllers ?? []).length > 0 && (
+                    <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+                        <h3 className="font-semibold mb-3">Controllers / HBA ({(currentNode.controllers ?? []).length} cards)</h3>
+                        <div className="space-y-2">
+                            {groupedControllers.map((controller) => (
+                                <div key={controller.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
+                                    <span className="min-w-0 break-words">
+                                        {controller.qty}x {controller.name} ({controller.type}, {controller.summary})
+                                    </span>
+                                    <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
+                                        {getDisplayPrice('controller', controller.id, controller.msrp) !== undefined && (
+                                            <span className="text-blue-400">${getDisplayPrice('controller', controller.id, controller.msrp)?.toLocaleString()}</span>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                const idx = (currentNode.controllers ?? []).findIndex((selected) => selected.id === controller.id);
+                                                if (idx !== -1) removeNodeController(selectedNodeIndex, idx);
+                                            }}
+                                            className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded"
+                                        >
+                                            Remove 1
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {(currentNode.networkAdapters ?? []).length > 0 && (
+                    <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+                        <h3 className="font-semibold mb-3">Networking ({(currentNode.networkAdapters ?? []).length} cards)</h3>
+                        <div className="space-y-2">
+                            {groupedNetworking.map((nic) => (
+                                <div key={nic.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
+                                    <span className="min-w-0 break-words">
+                                        {nic.qty}x {nic.name} ({nic.summary}{nic.ocp3 ? ', OCP 3.0' : ''})
+                                    </span>
+                                    <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
+                                        {getDisplayPrice('network', nic.id, nic.msrp) !== undefined && (
+                                            <span className="text-blue-400">${getDisplayPrice('network', nic.id, nic.msrp)?.toLocaleString()}</span>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                const idx = (currentNode.networkAdapters ?? []).findIndex((selected) => selected.id === nic.id);
+                                                if (idx !== -1) removeNodeNetworkAdapter(selectedNodeIndex, idx);
                                             }}
                                             className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded"
                                         >

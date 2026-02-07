@@ -1,0 +1,82 @@
+[
+    {
+        "id": "nic-ocp3-mcx623106",
+        "sku": "MCX623106AC-CDAT",
+        "vendor": "NVIDIA",
+        "name": "ConnectX-6 Dx OCP 3.0 2x25GbE",
+        "constraints": {
+            "ports": [
+                {
+                    "connector": "SFP28",
+                    "speedGbps": 25,
+                    "count": 2
+                }
+            ],
+            "ocp3Compatible": true,
+            "requiresTransceiver": true
+        },
+        "msrp": 699,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    },
+    {
+        "id": "nic-ocp3-e810",
+        "sku": "E810-XXVDA4OCP3",
+        "vendor": "Intel",
+        "name": "Ethernet 800 OCP 3.0 2x25GbE",
+        "constraints": {
+            "ports": [
+                {
+                    "connector": "SFP28",
+                    "speedGbps": 25,
+                    "count": 2
+                }
+            ],
+            "ocp3Compatible": true,
+            "requiresTransceiver": true
+        },
+        "msrp": 549,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    },
+    {
+        "id": "nic-pcie-x710",
+        "sku": "X710-DA2",
+        "vendor": "Intel",
+        "name": "X710 PCIe 2x10GbE",
+        "constraints": {
+            "ports": [
+                {
+                    "connector": "SFP+",
+                    "speedGbps": 10,
+                    "count": 2
+                }
+            ],
+            "ocp3Compatible": false,
+            "requiresTransceiver": true
+        },
+        "msrp": 299,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    },
+    {
+        "id": "nic-pcie-bcm57414",
+        "sku": "BCM57414",
+        "vendor": "Broadcom",
+        "name": "BCM57414 PCIe 2x25GbE",
+        "constraints": {
+            "ports": [
+                {
+                    "connector": "SFP28",
+                    "speedGbps": 25,
+                    "count": 2
+                }
+            ],
+            "ocp3Compatible": false,
+            "requiresTransceiver": true
+        },
+        "msrp": 479,
+        "currency": "USD",
+        "lastUpdated": "2026-02-07"
+    }
+]
