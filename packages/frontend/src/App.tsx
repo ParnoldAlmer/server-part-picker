@@ -21,7 +21,7 @@ function App() {
           <ChassisSelector />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 min-w-0">
               <div className="mb-8">
                 <button
                   onClick={() => resetBuild()}
@@ -37,7 +37,7 @@ function App() {
               </p>
               <NodeTabs />
             </div>
-            <div>
+            <div className="min-w-0">
               <BuildSummary />
             </div>
           </div>

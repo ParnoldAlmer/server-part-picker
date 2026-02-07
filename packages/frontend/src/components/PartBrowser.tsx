@@ -53,7 +53,7 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
     return (
         <div className="space-y-4">
             {/* Component Type Tabs */}
-            <div className="flex gap-2 border-b border-slate-700">
+            <div className="flex flex-wrap gap-2 border-b border-slate-700">
                 <button
                     onClick={() => setSelectedType('cpus')}
                     className={cn(
@@ -91,8 +91,8 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
 
             {/* Platform Filter (CPUs only) */}
             {selectedType === 'cpus' && (
-                <div className="flex gap-2">
-                    <span className="text-sm text-slate-400 py-2">Platform:</span>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm text-slate-400 py-1">Platform:</span>
                     {(['all', 'Intel', 'AMD', 'Ampere'] as const).map((platform) => (
                         <button
                             key={platform}
@@ -138,11 +138,11 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                         "border-slate-700 bg-slate-800 hover:border-blue-600"
                             )}
                         >
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                                <div className="flex-1 min-w-0">
                                     <h4 className="font-semibold">{cpu.name}</h4>
-                                    <p className="text-sm text-slate-400">{cpu.vendor} • {cpu.sku}</p>
-                                    <div className="mt-2 flex gap-4 text-sm">
+                                    <p className="text-sm text-slate-400 break-words">{cpu.vendor} • {cpu.sku}</p>
+                                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                         <span className="text-slate-400">{cpu.cores}C/{cpu.threads}T</span>
                                         <span className="text-slate-400">{cpu.constraints.tdpW}W TDP</span>
                                         <span className="text-slate-400">{cpu.constraints.socket}</span>
@@ -153,7 +153,7 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                         </p>
                                     )}
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
+                                <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
                                     {cpu.msrp && (
                                         <span className="text-blue-400 font-semibold">
                                             ${cpu.msrp.toLocaleString()}
@@ -235,11 +235,11 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     "border-slate-700 bg-slate-800 hover:border-blue-600"
                             )}
                         >
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                                <div className="flex-1 min-w-0">
                                     <h4 className="font-semibold">{mem.name}</h4>
-                                    <p className="text-sm text-slate-400">{mem.vendor} • {mem.sku}</p>
-                                    <div className="mt-2 flex gap-4 text-sm">
+                                    <p className="text-sm text-slate-400 break-words">{mem.vendor} • {mem.sku}</p>
+                                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                         <span className="text-slate-400">{mem.constraints.capacityGB}GB</span>
                                         <span className="text-slate-400">DDR{mem.constraints.ddrGen}</span>
                                         <span className="text-slate-400">{mem.constraints.type}</span>
@@ -261,7 +261,7 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                         </p>
                                     )}
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
+                                <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
                                     {mem.msrp && (
                                         <span className="text-blue-400 font-semibold">
                                             ${mem.msrp.toLocaleString()}
@@ -316,18 +316,18 @@ export function PartBrowser({ nodeIndex }: PartBrowserProps) {
                                     : "border-slate-700 bg-slate-800 hover:border-blue-600"
                             )}
                         >
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                                <div className="flex-1 min-w-0">
                                     <h4 className="font-semibold">{stg.name}</h4>
-                                    <p className="text-sm text-slate-400">{stg.vendor} • {stg.sku}</p>
-                                    <div className="mt-2 flex gap-4 text-sm">
+                                    <p className="text-sm text-slate-400 break-words">{stg.vendor} • {stg.sku}</p>
+                                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                         <span className="text-slate-400">{stg.constraints.capacityTB}TB</span>
                                         <span className="text-slate-400">{stg.type}</span>
                                         <span className="text-slate-400">{stg.constraints.formFactor}</span>
                                         <span className="text-slate-400">{stg.constraints.interface}</span>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
+                                <div className="flex flex-col items-start sm:items-end gap-2 sm:shrink-0">
                                     {stg.msrp && (
                                         <span className="text-blue-400 font-semibold">
                                             ${stg.msrp.toLocaleString()}

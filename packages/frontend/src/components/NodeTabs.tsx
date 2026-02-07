@@ -74,7 +74,7 @@ export function NodeTabs() {
     return (
         <div className="space-y-6">
             {/* Node Tabs */}
-            <div className="flex gap-2 border-b border-slate-700">
+            <div className="flex flex-wrap gap-2 border-b border-slate-700">
                 {build.nodes.map((_, idx) => (
                     <button
                         key={idx}
@@ -96,13 +96,13 @@ export function NodeTabs() {
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
                 <h3 className="font-semibold mb-3">Motherboard</h3>
                 {currentNode.motherboard ? (
-                    <div className="flex justify-between items-start bg-slate-900 rounded p-3">
-                        <div>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start bg-slate-900 rounded p-3">
+                        <div className="min-w-0">
                             <div className="font-medium">{currentNode.motherboard.name}</div>
-                            <div className="text-sm text-slate-400">
+                            <div className="text-sm text-slate-400 break-words">
                                 {currentNode.motherboard.vendor} • {currentNode.motherboard.constraints.socket}
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">
+                            <div className="text-xs text-slate-500 mt-1 break-words">
                                 {currentNode.motherboard.constraints.memory.socketsCount} socket{currentNode.motherboard.constraints.memory.socketsCount > 1 ? 's' : ''} •
                                 DDR{currentNode.motherboard.constraints.memory.ddrGen} •
                                 {currentNode.motherboard.constraints.memory.channelsPerSocket * currentNode.motherboard.constraints.memory.dimmsPerChannel * currentNode.motherboard.constraints.memory.socketsCount} DIMM slots
@@ -178,9 +178,9 @@ export function NodeTabs() {
                         <h3 className="font-semibold mb-3">CPUs ({currentNode.cpus.length})</h3>
                         <div className="space-y-2">
                             {groupedCpus.map((cpu) => (
-                                <div key={cpu.id} className="flex justify-between items-center bg-slate-900 rounded p-3 text-sm">
-                                    <span>{cpu.qty}x {cpu.name} ({cpu.cores}C, {cpu.tdpW}W)</span>
-                                    <div className="flex items-center gap-3">
+                                <div key={cpu.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
+                                    <span className="min-w-0 break-words">{cpu.qty}x {cpu.name} ({cpu.cores}C, {cpu.tdpW}W)</span>
+                                    <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
                                         {cpu.msrp && <span className="text-blue-400">${cpu.msrp.toLocaleString()}</span>}
                                         <button
                                             onClick={() => {
@@ -207,9 +207,9 @@ export function NodeTabs() {
                         </div>
                         <div className="space-y-2">
                             {groupedMemory.map((dimm) => (
-                                <div key={dimm.id} className="flex justify-between items-center bg-slate-900 rounded p-3 text-sm">
-                                    <span>{dimm.qty}x {dimm.name} ({dimm.capacityGB}GB DDR{dimm.ddrGen} {dimm.speedMT}MT/s)</span>
-                                    <div className="flex items-center gap-3">
+                                <div key={dimm.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
+                                    <span className="min-w-0 break-words">{dimm.qty}x {dimm.name} ({dimm.capacityGB}GB DDR{dimm.ddrGen} {dimm.speedMT}MT/s)</span>
+                                    <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
                                         {dimm.msrp && <span className="text-blue-400">${dimm.msrp.toLocaleString()}</span>}
                                         <button
                                             onClick={() => {
@@ -236,9 +236,9 @@ export function NodeTabs() {
                         </div>
                         <div className="space-y-2">
                             {groupedStorage.map((drive) => (
-                                <div key={drive.id} className="flex justify-between items-center bg-slate-900 rounded p-3 text-sm">
-                                    <span>{drive.qty}x {drive.name} ({drive.capacityTB}TB {drive.formFactor} {drive.iface})</span>
-                                    <div className="flex items-center gap-3">
+                                <div key={drive.id} className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center bg-slate-900 rounded p-3 text-sm">
+                                    <span className="min-w-0 break-words">{drive.qty}x {drive.name} ({drive.capacityTB}TB {drive.formFactor} {drive.iface})</span>
+                                    <div className="flex items-center gap-3 self-start sm:self-auto sm:shrink-0">
                                         {drive.msrp && <span className="text-blue-400">${drive.msrp.toLocaleString()}</span>}
                                         <button
                                             onClick={() => {

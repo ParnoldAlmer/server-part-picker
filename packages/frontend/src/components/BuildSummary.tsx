@@ -292,66 +292,69 @@ export function BuildSummary() {
                     <h3 className="text-lg font-semibold">Planner BOM</h3>
                     <span className="text-xs text-slate-400">Edit unit prices to match vendor quotes</span>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="text-left text-slate-400 border-b border-slate-700">
-                                <th className="py-2 pr-2">Category</th>
-                                <th className="py-2 pr-2">Location</th>
-                                <th className="py-2 pr-2">Part</th>
-                                <th className="py-2 pr-2">Qty</th>
-                                <th className="py-2 pr-2">Unit</th>
-                                <th className="py-2">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {plannerRows.map((row) => {
-                                const overrideKey = row.overrideKey;
-                                const overrideValue = overrideKey ? priceOverrides[overrideKey] : undefined;
-                                const unitPrice = overrideValue ?? row.defaultUnitPrice;
-                                const subtotal = unitPrice * row.quantity;
+                <div className="hidden md:grid md:grid-cols-[110px_90px_minmax(0,1fr)_50px_140px_120px] md:gap-2 text-xs uppercase tracking-wide text-slate-400 border-b border-slate-700 pb-2">
+                    <div>Category</div>
+                    <div>Location</div>
+                    <div>Part</div>
+                    <div>Qty</div>
+                    <div>Unit</div>
+                    <div>Subtotal</div>
+                </div>
+                <div className="space-y-2">
+                    {plannerRows.map((row) => {
+                        const overrideKey = row.overrideKey;
+                        const overrideValue = overrideKey ? priceOverrides[overrideKey] : undefined;
+                        const unitPrice = overrideValue ?? row.defaultUnitPrice;
+                        const subtotal = unitPrice * row.quantity;
 
-                                return (
-                                    <tr key={row.key} className="border-b border-slate-700/70">
-                                        <td className="py-2 pr-2 text-slate-300">{row.category}</td>
-                                        <td className="py-2 pr-2 text-slate-400">{row.location}</td>
-                                        <td className="py-2 pr-2">
-                                            <div className="text-slate-200">{row.item}</div>
-                                        </td>
-                                        <td className="py-2 pr-2">{row.quantity}</td>
-                                        <td className="py-2 pr-2">
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    step="0.01"
-                                                    value={unitPrice}
-                                                    onChange={(event) => {
-                                                        const nextValue = event.target.value === '' ? undefined : Number(event.target.value);
-                                                        if (overrideKey) {
-                                                            setPriceOverride(overrideKey, nextValue);
-                                                        }
-                                                    }}
-                                                    className="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1"
-                                                />
-                                                {overrideValue !== undefined && overrideKey && (
-                                                    <button
-                                                        onClick={() => setPriceOverride(overrideKey, undefined)}
-                                                        className="text-xs text-slate-400 hover:text-slate-200"
-                                                    >
-                                                        MSRP
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="py-2 font-medium text-slate-200">
-                                            ${subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                        return (
+                            <div key={row.key} className="rounded border border-slate-700 bg-slate-900 p-3">
+                                <div className="grid grid-cols-1 gap-2 md:grid-cols-[110px_90px_minmax(0,1fr)_50px_140px_120px] md:items-center md:gap-2">
+                                    <div className="md:hidden text-xs uppercase tracking-wide text-slate-500">Category</div>
+                                    <div className="text-slate-300">{row.category}</div>
+
+                                    <div className="md:hidden text-xs uppercase tracking-wide text-slate-500">Location</div>
+                                    <div className="text-slate-400">{row.location}</div>
+
+                                    <div className="md:hidden text-xs uppercase tracking-wide text-slate-500">Part</div>
+                                    <div className="text-slate-200 min-w-0 break-words">{row.item}</div>
+
+                                    <div className="md:hidden text-xs uppercase tracking-wide text-slate-500">Qty</div>
+                                    <div>{row.quantity}</div>
+
+                                    <div className="md:hidden text-xs uppercase tracking-wide text-slate-500">Unit</div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                            value={unitPrice}
+                                            onChange={(event) => {
+                                                const nextValue = event.target.value === '' ? undefined : Number(event.target.value);
+                                                if (overrideKey) {
+                                                    setPriceOverride(overrideKey, nextValue);
+                                                }
+                                            }}
+                                            className="w-full min-w-0 md:w-24 bg-slate-950 border border-slate-700 rounded px-2 py-1"
+                                        />
+                                        {overrideValue !== undefined && overrideKey && (
+                                            <button
+                                                onClick={() => setPriceOverride(overrideKey, undefined)}
+                                                className="text-xs text-slate-400 hover:text-slate-200 whitespace-nowrap"
+                                            >
+                                                MSRP
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="md:hidden text-xs uppercase tracking-wide text-slate-500">Subtotal</div>
+                                    <div className="font-medium text-slate-200">
+                                        ${subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -369,18 +372,30 @@ export function BuildSummary() {
                 {customCosts.length === 0 && (
                     <p className="text-sm text-slate-400">No custom lines yet. Add network cards, services, shipping, or misc parts.</p>
                 )}
+                {customCosts.length > 0 && (
+                    <div className="hidden md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_90px_120px_120px_40px] gap-2 text-xs uppercase tracking-wide text-slate-400">
+                        <div>Item</div>
+                        <div>Category</div>
+                        <div>Qty</div>
+                        <div>Unit</div>
+                        <div>Subtotal</div>
+                        <div></div>
+                    </div>
+                )}
                 {customCosts.map((item) => (
-                    <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
+                    <div key={item.id} className="rounded border border-slate-700 bg-slate-900 p-3 md:p-0 md:border-0 md:bg-transparent md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_90px_120px_120px_40px] md:gap-2 md:items-center">
+                        <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1">Item</div>
                         <input
                             value={item.label}
                             onChange={(event) => updateCustomCostItem(item.id, { label: event.target.value })}
-                            className="col-span-4 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                            className="w-full min-w-0 bg-slate-950 md:bg-slate-900 border border-slate-700 rounded px-2 py-1"
                             placeholder="Line item"
                         />
+                        <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Category</div>
                         <select
                             value={item.category}
                             onChange={(event) => updateCustomCostItem(item.id, { category: event.target.value as PlannerCostCategory })}
-                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                            className="w-full min-w-0 bg-slate-950 md:bg-slate-900 border border-slate-700 rounded px-2 py-1"
                         >
                             {PART_CATEGORY_OPTIONS.map((category) => (
                                 <option key={category} value={category}>
@@ -388,27 +403,30 @@ export function BuildSummary() {
                                 </option>
                             ))}
                         </select>
+                        <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Qty</div>
                         <input
                             type="number"
                             min={1}
                             value={item.quantity}
                             onChange={(event) => updateCustomCostItem(item.id, { quantity: Math.max(1, Number(event.target.value) || 1) })}
-                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                            className="w-full min-w-0 bg-slate-950 md:bg-slate-900 border border-slate-700 rounded px-2 py-1"
                         />
+                        <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Unit Price</div>
                         <input
                             type="number"
                             min={0}
                             step="0.01"
                             value={item.unitPrice}
                             onChange={(event) => updateCustomCostItem(item.id, { unitPrice: Math.max(0, Number(event.target.value) || 0) })}
-                            className="col-span-2 bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                            className="w-full min-w-0 bg-slate-950 md:bg-slate-900 border border-slate-700 rounded px-2 py-1"
                         />
-                        <div className="col-span-1 text-right text-sm font-medium">
+                        <div className="text-xs uppercase tracking-wide text-slate-500 md:hidden mb-1 mt-2 md:mt-0">Subtotal</div>
+                        <div className="text-left md:text-right text-sm font-medium mt-1 md:mt-0">
                             ${(item.quantity * item.unitPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </div>
                         <button
                             onClick={() => removeCustomCostItem(item.id)}
-                            className="col-span-1 flex items-center justify-center text-red-400 hover:text-red-300"
+                            className="mt-2 md:mt-0 flex items-center justify-center md:justify-self-end text-red-400 hover:text-red-300"
                             aria-label={`remove-${item.id}`}
                         >
                             <Trash2 size={16} />
@@ -420,66 +438,65 @@ export function BuildSummary() {
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 space-y-4">
                 <h3 className="text-lg font-semibold">Node Targets</h3>
                 <p className="text-sm text-slate-400">Set target specs per node to compare planned vs selected hardware.</p>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="text-left text-slate-400 border-b border-slate-700">
-                                <th className="py-2 pr-2">Node</th>
-                                <th className="py-2 pr-2">Target Cores</th>
-                                <th className="py-2 pr-2">Actual Cores</th>
-                                <th className="py-2 pr-2">Target RAM (GB)</th>
-                                <th className="py-2 pr-2">Actual RAM (GB)</th>
-                                <th className="py-2 pr-2">Target Storage (TB)</th>
-                                <th className="py-2">Actual Storage (TB)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {build.nodes.map((node, idx) => {
-                                const target = nodeTargets[node.index] ?? { cores: 0, memoryGB: 0, storageTB: 0 };
-                                const actual = nodeActuals[idx];
-                                const coreGap = target.cores > 0 && actual.cores < target.cores;
-                                const ramGap = target.memoryGB > 0 && actual.memoryGB < target.memoryGB;
-                                const storageGap = target.storageTB > 0 && actual.storageTB < target.storageTB;
+                <div className="space-y-3">
+                    {build.nodes.map((node, idx) => {
+                        const target = nodeTargets[node.index] ?? { cores: 0, memoryGB: 0, storageTB: 0 };
+                        const actual = nodeActuals[idx];
+                        const coreGap = target.cores > 0 && actual.cores < target.cores;
+                        const ramGap = target.memoryGB > 0 && actual.memoryGB < target.memoryGB;
+                        const storageGap = target.storageTB > 0 && actual.storageTB < target.storageTB;
 
-                                return (
-                                    <tr key={node.index} className="border-b border-slate-700/70">
-                                        <td className="py-2 pr-2">Node {idx + 1}</td>
-                                        <td className="py-2 pr-2">
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                value={target.cores}
-                                                onChange={(event) => setNodeTarget(node.index, { cores: Math.max(0, Number(event.target.value) || 0) })}
-                                                className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1"
-                                            />
-                                        </td>
-                                        <td className={`py-2 pr-2 font-medium ${coreGap ? 'text-red-400' : 'text-green-400'}`}>{actual.cores}</td>
-                                        <td className="py-2 pr-2">
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                value={target.memoryGB}
-                                                onChange={(event) => setNodeTarget(node.index, { memoryGB: Math.max(0, Number(event.target.value) || 0) })}
-                                                className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1"
-                                            />
-                                        </td>
-                                        <td className={`py-2 pr-2 font-medium ${ramGap ? 'text-red-400' : 'text-green-400'}`}>{actual.memoryGB}</td>
-                                        <td className="py-2 pr-2">
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                step="0.1"
-                                                value={target.storageTB}
-                                                onChange={(event) => setNodeTarget(node.index, { storageTB: Math.max(0, Number(event.target.value) || 0) })}
-                                                className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1"
-                                            />
-                                        </td>
-                                        <td className={`py-2 font-medium ${storageGap ? 'text-red-400' : 'text-green-400'}`}>{actual.storageTB}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                        return (
+                            <div key={node.index} className="rounded border border-slate-700 bg-slate-900 p-3 space-y-3">
+                                <div className="text-sm font-medium text-slate-200">Node {idx + 1}</div>
+
+                                <div className="grid grid-cols-1 gap-2">
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+                                        <label className="text-xs text-slate-400">Target Cores</label>
+                                        <span className={`text-sm font-semibold ${coreGap ? 'text-red-400' : 'text-green-400'}`}>
+                                            Actual: {actual.cores}
+                                        </span>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={target.cores}
+                                            onChange={(event) => setNodeTarget(node.index, { cores: Math.max(0, Number(event.target.value) || 0) })}
+                                            className="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+                                        <label className="text-xs text-slate-400">Target RAM (GB)</label>
+                                        <span className={`text-sm font-semibold ${ramGap ? 'text-red-400' : 'text-green-400'}`}>
+                                            Actual: {actual.memoryGB}
+                                        </span>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={target.memoryGB}
+                                            onChange={(event) => setNodeTarget(node.index, { memoryGB: Math.max(0, Number(event.target.value) || 0) })}
+                                            className="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+                                        <label className="text-xs text-slate-400">Target Storage (TB)</label>
+                                        <span className={`text-sm font-semibold ${storageGap ? 'text-red-400' : 'text-green-400'}`}>
+                                            Actual: {actual.storageTB}
+                                        </span>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            step="0.1"
+                                            value={target.storageTB}
+                                            onChange={(event) => setNodeTarget(node.index, { storageTB: Math.max(0, Number(event.target.value) || 0) })}
+                                            className="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded px-2 py-1"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
