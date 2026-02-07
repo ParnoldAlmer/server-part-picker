@@ -1,3 +1,5 @@
+import type { Build, Catalog } from '../../types/hardware';
+
 // Validation issue types
 export type ValidationSeverity = "error" | "warn";
 
@@ -8,8 +10,14 @@ export interface ValidationIssue {
     message: string;
 }
 
+export interface ValidationContext {
+    now?: Date;
+    strictMode?: boolean;
+}
+
 // Rule type
 export type ValidationRule = (
-    build: any,
-    catalog?: any
+    build: Build,
+    catalog?: Catalog,
+    context?: ValidationContext
 ) => ValidationIssue[];

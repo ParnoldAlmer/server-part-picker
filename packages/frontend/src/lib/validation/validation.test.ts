@@ -3,6 +3,7 @@ import { socketRule } from './rules/socketRule';
 import { memoryTypeRule } from './rules/memoryTypeRule';
 import { bayLimitRule } from './rules/bayLimitRule';
 import { powerRule } from './rules/powerRule';
+import { compatibilityGraphRule } from './rules/compatibilityGraphRule';
 import type { Build } from '../../types/hardware';
 
 // Test data helpers
@@ -352,7 +353,7 @@ describe('Power Rule', () => {
                             constraints: {
                                 socket: 'LGA4677',
                                 memGenSupported: [5],
-                                tdpW: 420,
+                                tdpW: 340,
                                 maxMemSpeedMT: 4800,
                                 lanes: 80,
                             },
@@ -368,5 +369,200 @@ describe('Power Rule', () => {
         const headroomWarning = issues.find((i) => i.code === 'POWER_HEADROOM_LOW');
         expect(headroomWarning).toBeDefined();
         expect(headroomWarning?.severity).toBe('warn');
+    });
+});
+
+describe('Compatibility Graph Rule', () => {
+    it('enforces registered ECC memory and E-ATX/SSI-EEB form factor for constrained CPUs', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-compat-1',
+                sku: 'CHASSIS-COMPAT-1',
+                vendor: 'Test',
+                name: 'Test Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [{ index: 0, moboFormFactors: ['ATX', 'EATX', 'SSI-EEB'], cpuCount: 2 }],
+                    bays: [],
+                    psu: { maxWatts: 1600, count: 2, redundancy: true, redundancyMode: 'N+1' },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: {
+                        id: 'mobo-compat-1',
+                        sku: 'MOBO-COMPAT-1',
+                        vendor: 'Test',
+                        name: 'ATX board',
+                        formFactor: 'ATX',
+                        constraints: {
+                            socket: 'SP5',
+                            memory: {
+                                ddrGen: 5,
+                                dimmTypes: ['RDIMM', 'UDIMM'],
+                                socketsCount: 2,
+                                channelsPerSocket: 12,
+                                dimmsPerChannel: 1,
+                                maxPerDimmGB: 128,
+                                maxTotalGB: 3072,
+                            },
+                            pcie: { gen: 5, lanes: 128, slots: [] },
+                            storage: { headers: [], onboardSlots: [] },
+                        },
+                    },
+                    cpus: [
+                        {
+                            id: 'cpu-compat-1',
+                            sku: 'CPU-COMPAT-1',
+                            vendor: 'Test',
+                            name: 'CPU X',
+                            family: 'ServerX',
+                            platform: 'AMD',
+                            cores: 64,
+                            threads: 128,
+                            baseClock: 2.4,
+                            constraints: {
+                                socket: 'SP5',
+                                supportedSocketCounts: [2],
+                                memGenSupported: [5],
+                                tdpW: 360,
+                                maxMemSpeedMT: 4800,
+                                lanes: 128,
+                                requiresRegisteredEcc: true,
+                            },
+                        },
+                    ],
+                    memory: [
+                        {
+                            id: 'mem-compat-1',
+                            sku: 'MEM-COMPAT-1',
+                            vendor: 'Test',
+                            name: 'UDIMM 32GB',
+                            constraints: {
+                                ddrGen: 5,
+                                type: 'UDIMM',
+                                buffering: 'Unbuffered',
+                                ecc: 'Non-ECC',
+                                speedMT: 5600,
+                                capacityGB: 32,
+                                ranks: 2,
+                                rankDensity: 'DR',
+                                voltage: 1.1,
+                            },
+                        },
+                    ],
+                    storage: [],
+                },
+            ],
+        });
+
+        const issues = compatibilityGraphRule(build);
+        expect(issues.some((issue) => issue.code === 'CPU_REQUIRES_REGISTERED_MEMORY')).toBe(true);
+        expect(issues.some((issue) => issue.code === 'CPU_REQUIRES_ECC_MEMORY')).toBe(true);
+        expect(issues.some((issue) => issue.code === 'CPU_FORM_FACTOR_RESTRICTED')).toBe(true);
+    });
+
+    it('validates backplane controller port pathing', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-compat-2',
+                sku: 'CHASSIS-COMPAT-2',
+                vendor: 'Test',
+                name: 'Backplane Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [{ index: 0, moboFormFactors: ['EATX'], cpuCount: 2 }],
+                    bays: [{ formFactor: '2.5"', count: 8, interface: 'SAS', hotSwap: true }],
+                    psu: { maxWatts: 1200, count: 2, redundancy: true, redundancyMode: 'N+1' },
+                    backplanes: [
+                        {
+                            id: 'bp-1',
+                            name: '8x2.5 SAS',
+                            bayFormFactor: '2.5"',
+                            bayCount: 8,
+                            caddyTypes: ['2.5-sas-caddy'],
+                            supportedInterfaces: ['SAS'],
+                            pathing: [
+                                {
+                                    interface: 'SAS',
+                                    connector: 'SFF-8643',
+                                    ports: 2,
+                                    lanesPerPort: 4,
+                                },
+                            ],
+                            compatibleControllerTypes: ['HBA', 'RAID'],
+                        },
+                    ],
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: {
+                        id: 'mobo-compat-2',
+                        sku: 'MOBO-COMPAT-2',
+                        vendor: 'Test',
+                        name: 'EATX board',
+                        formFactor: 'EATX',
+                        constraints: {
+                            socket: 'SP5',
+                            memory: {
+                                ddrGen: 5,
+                                dimmTypes: ['RDIMM'],
+                                socketsCount: 2,
+                                channelsPerSocket: 12,
+                                dimmsPerChannel: 1,
+                                maxPerDimmGB: 128,
+                                maxTotalGB: 3072,
+                            },
+                            pcie: { gen: 5, lanes: 128, slots: [] },
+                            storage: { headers: [], onboardSlots: [] },
+                        },
+                    },
+                    cpus: [],
+                    memory: [],
+                    storage: Array(8)
+                        .fill(null)
+                        .map((_, idx) => ({
+                            id: `drive-${idx}`,
+                            sku: `DRIVE-${idx}`,
+                            vendor: 'Test',
+                            name: `SAS Drive ${idx}`,
+                            type: 'HDD' as const,
+                            constraints: {
+                                formFactor: '2.5"' as const,
+                                interface: 'SAS' as const,
+                                capacityTB: 2,
+                                tdpW: 10,
+                            },
+                        })),
+                    controllers: [
+                        {
+                            id: 'ctrl-1',
+                            sku: 'CTRL-1',
+                            vendor: 'Test',
+                            name: 'Single-port HBA',
+                            constraints: {
+                                type: 'HBA',
+                                pcieGen: 4,
+                                pcieLanes: 8,
+                                ports: [
+                                    {
+                                        connector: 'SFF-8643',
+                                        count: 1,
+                                        lanesPerPort: 4,
+                                        interface: 'SAS',
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
+
+        const issues = compatibilityGraphRule(build);
+        expect(issues.some((issue) => issue.code === 'BACKPLANE_CONTROLLER_PORT_SHORTAGE')).toBe(true);
     });
 });

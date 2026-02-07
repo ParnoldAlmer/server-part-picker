@@ -9,6 +9,7 @@ import {
     powerRule,
     nodeTopologyRule,
     memorySlotRule,
+    compatibilityGraphRule,
 } from '../lib/validation';
 import { calculatePower } from '../lib/validation/rules/powerRule';
 import type { PlannerCostCategory } from '../store/buildStore';
@@ -23,6 +24,7 @@ const allRules = [
     bayLimitRule,
     powerRule,
     nodeTopologyRule,
+    compatibilityGraphRule,
 ];
 
 const PART_CATEGORY_OPTIONS: PlannerCostCategory[] = ['Network', 'Accessories', 'Service', 'Other'];

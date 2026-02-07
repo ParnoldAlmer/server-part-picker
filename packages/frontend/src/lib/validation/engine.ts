@@ -1,17 +1,20 @@
 import type { ValidationRule, ValidationIssue } from './types';
+import type { Build, Catalog } from '../../types/hardware';
+import type { ValidationContext } from './types';
 
 /**
  * Rule engine - runs all validation rules against a build
  */
 export function runValidation(
-    build: any,
+    build: Build,
     rules: ValidationRule[],
-    catalog?: any
+    catalog?: Catalog,
+    context?: ValidationContext
 ): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
 
     for (const rule of rules) {
-        const ruleIssues = rule(build, catalog);
+        const ruleIssues = rule(build, catalog, context);
         issues.push(...ruleIssues);
     }
 

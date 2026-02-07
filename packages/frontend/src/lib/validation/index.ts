@@ -6,6 +6,8 @@ export { bayLimitRule } from './rules/bayLimitRule';
 export { powerRule, calculatePower } from './rules/powerRule';
 export { nodeTopologyRule } from './rules/nodeTopologyRule';
 export { memorySlotRule } from './rules/memorySlotRule';
+export { compatibilityGraphRule } from './rules/compatibilityGraphRule';
+export { runCompatibilityCheck } from './CompatibilityCheck';
 
 // Export engine and types
 export * from './engine';
