@@ -986,6 +986,7 @@ export function PartBrowser({ nodeIndex, selectedType: selectedTypeProp, onSelec
                                     <p className="text-sm text-slate-400 break-words">{stg.vendor} • {stg.sku}</p>
                                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                         <span className="text-slate-400">{stg.constraints.capacityTB}TB</span>
+                                        <span className="text-slate-400">{stg.constraints.tdpW}W TDP</span>
                                         <span className="text-slate-400">{stg.type}</span>
                                         <span className="text-slate-400">{stg.constraints.formFactor}</span>
                                         <span className="text-slate-400">{stg.constraints.interface}</span>

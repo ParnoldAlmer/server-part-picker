@@ -1,8 +1,12 @@
 import type { SharedBuildBundle } from '../store/buildStore';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const API_BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
 function apiUrl(path: string): string {
+    if (!API_BASE) {
+        return path;
+    }
+
     const normalizedBase = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
     return `${normalizedBase}${path}`;
 }
@@ -41,4 +45,3 @@ export async function loadSharedBuild(shareCode: string): Promise<SharedBuildBun
     const payload = await response.json() as SharedBuildBundle;
     return payload;
 }
-
