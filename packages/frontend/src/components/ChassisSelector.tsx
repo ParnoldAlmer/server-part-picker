@@ -44,6 +44,10 @@ const INITIAL_FORM_STATE: ChassisFormState = {
 
 const BAY_FORM_FACTORS: BayFormFactor[] = ["2.5\"", "3.5\"", "E1.S", "E1.L", "E3.S", "E3.L", "M.2", "U.2", "U.3"];
 const BAY_INTERFACES: BayInterface[] = ["SATA", "SAS", "NVMe"];
+const formatBayLabel = (count: number, formFactor: BayFormFactor, perNode?: boolean): string => {
+    const countLabel = perNode ? `${count}/node` : String(count);
+    return `${countLabel} × ${formFactor}`;
+};
 
 export function ChassisSelector() {
     const defaultChassis = useMemo(() => chassisData as Chassis[], []);
@@ -554,7 +558,7 @@ export function ChassisSelector() {
                                         <span className="text-slate-400">Bays:</span>
                                         <span className="font-medium text-right max-w-[60%]">
                                             {c.constraints.bays.length > 0
-                                                ? c.constraints.bays.map(b => `${b.count}× ${b.formFactor}`).join(', ')
+                                                ? c.constraints.bays.map(b => formatBayLabel(b.count, b.formFactor, b.perNode)).join(', ')
                                                 : "None"}
                                         </span>
                                     </div>

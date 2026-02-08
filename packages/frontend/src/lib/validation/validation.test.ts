@@ -268,6 +268,111 @@ describe('Bay Limit Rule', () => {
         expect(issues.length).toBeGreaterThan(0);
         expect(issues[0].code).toBe('BAY_LIMIT_EXCEEDED');
     });
+
+    it('allows up to count drives per node when bay group is marked perNode', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-1',
+                sku: 'TEST-CHASSIS',
+                vendor: 'Test',
+                name: 'Test Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [
+                        { index: 0, moboFormFactors: ['EATX'], cpuCount: 2 },
+                        { index: 1, moboFormFactors: ['EATX'], cpuCount: 2 },
+                    ],
+                    bays: [{ formFactor: '2.5"', count: 6, interface: 'NVMe', hotSwap: true, perNode: true }],
+                    psu: { maxWatts: 2000, count: 2, redundancy: true },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: null,
+                    cpus: [],
+                    memory: [],
+                    storage: Array(6).fill(null).map((_, i) => ({
+                        id: `node0-storage-${i}`,
+                        sku: 'TEST-SSD',
+                        vendor: 'Test',
+                        name: 'Test SSD',
+                        type: 'NVMe' as const,
+                        constraints: {
+                            formFactor: '2.5"' as const,
+                            interface: 'NVMe' as const,
+                            capacityTB: 1,
+                            tdpW: 8,
+                        },
+                    })),
+                },
+                {
+                    index: 1,
+                    motherboard: null,
+                    cpus: [],
+                    memory: [],
+                    storage: [],
+                },
+            ],
+        });
+
+        const issues = bayLimitRule(build);
+        expect(issues.find((i) => i.code === 'BAY_LIMIT_EXCEEDED')).toBeUndefined();
+        expect(issues.find((i) => i.code === 'BAY_PER_NODE_EXCEEDED')).toBeUndefined();
+    });
+
+    it('fails when a node exceeds per-node bay count for perNode bay groups', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-1',
+                sku: 'TEST-CHASSIS',
+                vendor: 'Test',
+                name: 'Test Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [
+                        { index: 0, moboFormFactors: ['EATX'], cpuCount: 2 },
+                        { index: 1, moboFormFactors: ['EATX'], cpuCount: 2 },
+                    ],
+                    bays: [{ formFactor: '2.5"', count: 6, interface: 'NVMe', hotSwap: true, perNode: true }],
+                    psu: { maxWatts: 2000, count: 2, redundancy: true },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: null,
+                    cpus: [],
+                    memory: [],
+                    storage: Array(7).fill(null).map((_, i) => ({
+                        id: `node0-storage-${i}`,
+                        sku: 'TEST-SSD',
+                        vendor: 'Test',
+                        name: 'Test SSD',
+                        type: 'NVMe' as const,
+                        constraints: {
+                            formFactor: '2.5"' as const,
+                            interface: 'NVMe' as const,
+                            capacityTB: 1,
+                            tdpW: 8,
+                        },
+                    })),
+                },
+                {
+                    index: 1,
+                    motherboard: null,
+                    cpus: [],
+                    memory: [],
+                    storage: [],
+                },
+            ],
+        });
+
+        const issues = bayLimitRule(build);
+        const perNodeIssue = issues.find((i) => i.code === 'BAY_PER_NODE_EXCEEDED');
+        expect(perNodeIssue).toBeDefined();
+        expect(perNodeIssue?.message).toContain('exceeds 6 per-node limit');
+    });
 });
 
 describe('Power Rule', () => {

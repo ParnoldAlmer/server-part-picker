@@ -10,6 +10,7 @@ export const bayLimitRule: ValidationRule = (build: Build): ValidationIssue[] =>
     if (!build.chassis || !build.nodes) return issues;
 
     const bayConstraints = build.chassis.constraints.bays;
+    const nodeCount = Math.max(1, build.nodes.length);
 
     // Aggregate storage across all nodes
     const storageByType: Record<string, number> = {};
@@ -27,13 +28,14 @@ export const bayLimitRule: ValidationRule = (build: Build): ValidationIssue[] =>
     // Check each bay type
     for (const bayConfig of bayConstraints) {
         const driveCount = storageByType[bayConfig.formFactor] || 0;
+        const totalAllowed = bayConfig.perNode ? bayConfig.count * nodeCount : bayConfig.count;
 
-        if (driveCount > bayConfig.count) {
+        if (driveCount > totalAllowed) {
             issues.push({
                 code: 'BAY_LIMIT_EXCEEDED',
                 severity: 'error',
                 path: 'chassis',
-                message: `${driveCount} ${bayConfig.formFactor} drives exceeds ${bayConfig.count} available ${bayConfig.formFactor} bays`,
+                message: `${driveCount} ${bayConfig.formFactor} drives exceeds ${totalAllowed} available ${bayConfig.formFactor} bays`,
             });
         }
 
@@ -58,7 +60,7 @@ export const bayLimitRule: ValidationRule = (build: Build): ValidationIssue[] =>
 
         // Warn if per-node limit exists and is violated
         if (bayConfig.perNode) {
-            const baysPerNode = Math.floor(bayConfig.count / build.nodes.length);
+            const baysPerNode = bayConfig.count;
             for (let i = 0; i < build.nodes.length; i++) {
                 const node = build.nodes[i];
                 if (!node.storage) continue;
