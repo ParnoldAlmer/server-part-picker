@@ -80,6 +80,7 @@ export interface RedundantPsuConstraints {
     count: number;
     redundancy: boolean;
     redundancyMode?: PsuRedundancyMode;
+    perNode?: boolean; // If true, PSU count is interpreted per node
 }
 
 // Constraints for Chassis

@@ -39,6 +39,7 @@ export const ChassisConstraintsSchema = z.object({
         count: z.number(),
         redundancy: z.boolean(),
         redundancyMode: PsuRedundancyModeSchema.optional(),
+        perNode: z.boolean().optional(),
     }),
     risers: z.array(z.object({
         slotIndex: z.number(),

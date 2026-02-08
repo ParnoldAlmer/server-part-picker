@@ -370,6 +370,141 @@ describe('Power Rule', () => {
         expect(headroomWarning).toBeDefined();
         expect(headroomWarning?.severity).toBe('warn');
     });
+
+    it('should scale PSU capacity by node count when PSU count is per node', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-1',
+                sku: 'TEST-CHASSIS',
+                vendor: 'Test',
+                name: 'Dual Node Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [
+                        { index: 0, moboFormFactors: ['EATX'], cpuCount: 1 },
+                        { index: 1, moboFormFactors: ['EATX'], cpuCount: 1 },
+                    ],
+                    bays: [],
+                    psu: { maxWatts: 800, count: 2, redundancy: false, perNode: true },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: null,
+                    cpus: [
+                        {
+                            id: 'cpu-1',
+                            sku: 'TEST-CPU-1',
+                            vendor: 'Test',
+                            name: 'Node CPU A',
+                            family: 'Test',
+                            platform: 'Intel',
+                            cores: 32,
+                            threads: 64,
+                            baseClock: 2.0,
+                            constraints: {
+                                socket: 'LGA4677',
+                                memGenSupported: [5],
+                                tdpW: 700,
+                                maxMemSpeedMT: 4800,
+                                lanes: 80,
+                            },
+                        },
+                    ],
+                    memory: [],
+                    storage: [],
+                },
+                {
+                    index: 1,
+                    motherboard: null,
+                    cpus: [
+                        {
+                            id: 'cpu-2',
+                            sku: 'TEST-CPU-2',
+                            vendor: 'Test',
+                            name: 'Node CPU B',
+                            family: 'Test',
+                            platform: 'Intel',
+                            cores: 32,
+                            threads: 64,
+                            baseClock: 2.0,
+                            constraints: {
+                                socket: 'LGA4677',
+                                memGenSupported: [5],
+                                tdpW: 700,
+                                maxMemSpeedMT: 4800,
+                                lanes: 80,
+                            },
+                        },
+                    ],
+                    memory: [],
+                    storage: [],
+                },
+            ],
+        });
+
+        const issues = powerRule(build);
+        expect(issues.some((i) => i.code === 'POWER_EXCEEDED')).toBe(false);
+    });
+
+    it('should fail when an individual node exceeds per-node PSU capacity', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-1',
+                sku: 'TEST-CHASSIS',
+                vendor: 'Test',
+                name: 'Dual Node Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [
+                        { index: 0, moboFormFactors: ['EATX'], cpuCount: 1 },
+                        { index: 1, moboFormFactors: ['EATX'], cpuCount: 1 },
+                    ],
+                    bays: [],
+                    psu: { maxWatts: 800, count: 2, redundancy: false, perNode: true },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: null,
+                    cpus: [
+                        {
+                            id: 'cpu-1',
+                            sku: 'TEST-CPU-1',
+                            vendor: 'Test',
+                            name: 'Oversized CPU',
+                            family: 'Test',
+                            platform: 'Intel',
+                            cores: 32,
+                            threads: 64,
+                            baseClock: 2.0,
+                            constraints: {
+                                socket: 'LGA4677',
+                                memGenSupported: [5],
+                                tdpW: 1700,
+                                maxMemSpeedMT: 4800,
+                                lanes: 80,
+                            },
+                        },
+                    ],
+                    memory: [],
+                    storage: [],
+                },
+                {
+                    index: 1,
+                    motherboard: null,
+                    cpus: [],
+                    memory: [],
+                    storage: [],
+                },
+            ],
+        });
+
+        const issues = powerRule(build);
+        expect(issues.some((i) => i.code === 'POWER_NODE_EXCEEDED')).toBe(true);
+    });
 });
 
 describe('Compatibility Graph Rule', () => {

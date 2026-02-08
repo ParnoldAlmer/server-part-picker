@@ -35,15 +35,51 @@ function resolveRedundancyMode(psu: RedundantPsuConstraints): PsuRedundancyMode 
     return psu.redundancy ? 'N+1' : 'N';
 }
 
-function calculateEffectiveRedundantCapacity(psu: RedundantPsuConstraints): number {
-    const mode = resolveRedundancyMode(psu);
+function calculateEffectiveRedundantCount(count: number, mode: PsuRedundancyMode): number {
     if (mode === 'N') {
-        return psu.maxWatts * psu.count;
+        return count;
     }
     if (mode === 'N+1') {
-        return psu.maxWatts * Math.max(0, psu.count - 1);
+        return Math.max(0, count - 1);
     }
-    return psu.maxWatts * Math.floor(psu.count / 2);
+    return Math.floor(count / 2);
+}
+
+interface PsuCapacitySummary {
+    mode: PsuRedundancyMode;
+    perNode: boolean;
+    nodeCount: number;
+    installedCount: number;
+    effectiveCount: number;
+    nameplateCapacity: number;
+    effectiveCapacity: number;
+    nodeNameplateCapacity: number;
+    nodeEffectiveCapacity: number;
+}
+
+function calculatePsuCapacitySummary(build: Build): PsuCapacitySummary | null {
+    if (!build.chassis) return null;
+
+    const psu = build.chassis.constraints.psu;
+    const mode = resolveRedundancyMode(psu);
+    const perNode = psu.perNode === true;
+    const nodeCount = build.nodes?.length || build.chassis.constraints.nodes.length || 0;
+    const domains = perNode ? Math.max(1, nodeCount) : 1;
+    const installedCount = psu.count * domains;
+    const nodeEffectiveCount = calculateEffectiveRedundantCount(psu.count, mode);
+    const effectiveCount = nodeEffectiveCount * domains;
+
+    return {
+        mode,
+        perNode,
+        nodeCount,
+        installedCount,
+        effectiveCount,
+        nameplateCapacity: psu.maxWatts * installedCount,
+        effectiveCapacity: psu.maxWatts * effectiveCount,
+        nodeNameplateCapacity: psu.maxWatts * psu.count,
+        nodeEffectiveCapacity: psu.maxWatts * nodeEffectiveCount,
+    };
 }
 
 function calculateRequiredPower(totalPower: number): number {
@@ -60,9 +96,12 @@ export const powerRule: ValidationRule = (build: Build): ValidationIssue[] => {
 
     const psuConstraints = build.chassis.constraints.psu;
     const totalPower = calculatePower(build);
-    const mode = resolveRedundancyMode(psuConstraints);
-    const nameplateCapacity = psuConstraints.maxWatts * psuConstraints.count;
-    const effectiveCapacity = calculateEffectiveRedundantCapacity(psuConstraints);
+    const psuCapacity = calculatePsuCapacitySummary(build);
+    if (!psuCapacity) return issues;
+
+    const mode = psuCapacity.mode;
+    const nameplateCapacity = psuCapacity.nameplateCapacity;
+    const effectiveCapacity = psuCapacity.effectiveCapacity;
     const requiredPower = calculateRequiredPower(totalPower);
 
     // Error if exceeds total installed PSU nameplate capacity
@@ -75,12 +114,12 @@ export const powerRule: ValidationRule = (build: Build): ValidationIssue[] => {
         });
     }
 
-    if (effectiveCapacity <= 0) {
+    if (effectiveCapacity <= 0 || psuConstraints.count <= 0) {
         issues.push({
             code: 'POWER_REDUNDANCY_INVALID',
             severity: 'error',
             path: 'chassis',
-            message: `Redundancy mode ${mode} is invalid for ${psuConstraints.count} PSU(s).`,
+            message: `Redundancy mode ${mode} is invalid for ${psuConstraints.count} PSU(s)${psuCapacity.perNode ? ' per node' : ''}.`,
         });
         return issues;
     }
@@ -106,10 +145,40 @@ export const powerRule: ValidationRule = (build: Build): ValidationIssue[] => {
         });
     }
 
+    if (psuCapacity.perNode) {
+        for (let nodeIndex = 0; nodeIndex < build.nodes.length; nodeIndex += 1) {
+            const node = build.nodes[nodeIndex];
+            const nodeBuild: Build = {
+                ...build,
+                nodes: [node],
+            };
+            const nodePower = calculatePower(nodeBuild);
+            const nodeRequiredPower = calculateRequiredPower(nodePower);
+
+            if (nodePower > psuCapacity.nodeNameplateCapacity) {
+                issues.push({
+                    code: 'POWER_NODE_EXCEEDED',
+                    severity: 'error',
+                    path: `nodes[${nodeIndex}]`,
+                    message: `Node ${nodeIndex + 1} uses ${nodePower}W, exceeding node PSU capacity ${psuCapacity.nodeNameplateCapacity}W.`,
+                });
+            }
+
+            if (nodeRequiredPower > psuCapacity.nodeEffectiveCapacity) {
+                issues.push({
+                    code: 'POWER_NODE_REDUNDANCY_EXCEEDED',
+                    severity: 'error',
+                    path: `nodes[${nodeIndex}]`,
+                    message: `Node ${nodeIndex + 1} requires ${nodeRequiredPower}W (including 20% overhead), exceeding ${mode} node effective capacity ${psuCapacity.nodeEffectiveCapacity}W.`,
+                });
+            }
+        }
+    }
+
     return issues;
 };
 
 /**
  * Export power calculation for UI use
  */
-export { calculatePower };
+export { calculatePower, calculatePsuCapacitySummary };

@@ -11,7 +11,7 @@ import {
     memorySlotRule,
     compatibilityGraphRule,
 } from '../lib/validation';
-import { calculatePower } from '../lib/validation/rules/powerRule';
+import { calculatePower, calculatePsuCapacitySummary } from '../lib/validation/rules/powerRule';
 import type { PlannerCostCategory } from '../store/buildStore';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -127,6 +127,7 @@ export function BuildSummary() {
     const issues = runValidation(build, allRules);
     const { errors, warnings } = categorizeIssues(issues);
     const totalPower = calculatePower(build);
+    const psuCapacity = calculatePsuCapacitySummary(build);
     const plannerRows: PlannerRow[] = [];
 
     plannerRows.push({
@@ -371,7 +372,10 @@ export function BuildSummary() {
                         <div className="flex justify-between">
                             <span className="text-slate-400">PSU Capacity:</span>
                             <span className="font-medium">
-                                {build.chassis.constraints.psu.maxWatts}W
+                                {psuCapacity
+                                    ? `${psuCapacity.nameplateCapacity}W installed (${build.chassis.constraints.psu.maxWatts}W × ${build.chassis.constraints.psu.count}${build.chassis.constraints.psu.perNode ? '/node' : ''})`
+                                    : `${build.chassis.constraints.psu.maxWatts}W`
+                                }
                             </span>
                         </div>
                     )}

@@ -22,6 +22,8 @@ interface ChassisFormState {
     formFactor: FormFactor;
     nodeCount: number;
     psuWatts: number;
+    psuCount: number;
+    psuPerNode: boolean;
     ocp3SlotsPerNode: number;
     maxDimmsPerNode?: number;
     bayGroups: BayGroupInput[];
@@ -34,6 +36,8 @@ const INITIAL_FORM_STATE: ChassisFormState = {
     formFactor: '1U',
     nodeCount: 1,
     psuWatts: 0,
+    psuCount: 2,
+    psuPerNode: false,
     ocp3SlotsPerNode: 0,
     bayGroups: [],
 };
@@ -110,6 +114,7 @@ export function ChassisSelector() {
         if (!formState.name) newErrors.name = "Model name is required";
         if (formState.nodeCount < 1) newErrors.nodeCount = "Must have at least 1 node";
         if (formState.psuWatts < 0) newErrors.psuWatts = "Watts cannot be negative";
+        if (formState.psuCount < 1) newErrors.psuCount = "PSU count must be at least 1";
         if (formState.ocp3SlotsPerNode < 0) newErrors.ocp3SlotsPerNode = "OCP 3.0 slots cannot be negative";
 
         // Check duplicates (exclude the chassis being edited)
@@ -151,8 +156,9 @@ export function ChassisSelector() {
                 })),
                 psu: {
                     maxWatts: formState.psuWatts,
-                    count: 2,
-                    redundancy: true
+                    count: formState.psuCount,
+                    redundancy: true,
+                    perNode: formState.psuPerNode,
                 },
                 maxDimmsPerNode: formState.maxDimmsPerNode
             }
@@ -181,6 +187,8 @@ export function ChassisSelector() {
             formFactor: chassis.formFactor,
             nodeCount: chassis.constraints.nodes.length,
             psuWatts: chassis.constraints.psu.maxWatts,
+            psuCount: chassis.constraints.psu.count,
+            psuPerNode: chassis.constraints.psu.perNode ?? false,
             ocp3SlotsPerNode: chassis.constraints.nodes[0]?.ocp3Slots ?? 0,
             maxDimmsPerNode: chassis.constraints.maxDimmsPerNode,
             bayGroups: chassis.constraints.bays.map(b => ({
@@ -330,6 +338,20 @@ export function ChassisSelector() {
                         </div>
                         <div className="space-y-1">
                             <label className="block text-sm font-medium text-slate-400 mb-1">
+                                PSU Count
+                            </label>
+                            <input
+                                type="number"
+                                min={1}
+                                value={formState.psuCount}
+                                onChange={e => setFormState({ ...formState, psuCount: parseInt(e.target.value) || 0 })}
+                                className={cn("w-full bg-slate-900 border rounded px-3 py-2", errors.psuCount ? "border-red-500" : "border-slate-700")}
+                                placeholder="2"
+                            />
+                            {errors.psuCount && <p className="text-sm text-red-500 mt-1">{errors.psuCount}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
                                 Max DIMMs/Node
                             </label>
                             <input
@@ -344,6 +366,20 @@ export function ChassisSelector() {
                                 placeholder="No Limit"
                             />
                             {errors.maxDimmsPerNode && <p className="text-sm text-red-500 mt-1">{errors.maxDimmsPerNode}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                                PSU Scope
+                            </label>
+                            <label className="flex items-center gap-2 h-[42px] px-3 bg-slate-900 border border-slate-700 rounded">
+                                <input
+                                    type="checkbox"
+                                    checked={formState.psuPerNode}
+                                    onChange={e => setFormState({ ...formState, psuPerNode: e.target.checked })}
+                                    className="w-4 h-4 bg-slate-800 border border-slate-700 rounded"
+                                />
+                                <span className="text-sm text-slate-300">Count is per node</span>
+                            </label>
                         </div>
                         <div className="space-y-1">
                             <label className="block text-sm font-medium text-slate-400 mb-1">
@@ -524,7 +560,9 @@ export function ChassisSelector() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-400">PSU:</span>
-                                        <span className="font-medium">{c.constraints.psu.maxWatts}W</span>
+                                        <span className="font-medium">
+                                            {c.constraints.psu.maxWatts}W × {c.constraints.psu.count}{c.constraints.psu.perNode ? '/node' : ''}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-400">OCP 3.0/Node:</span>
