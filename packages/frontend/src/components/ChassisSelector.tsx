@@ -48,6 +48,12 @@ const formatBayLabel = (count: number, formFactor: BayFormFactor, perNode?: bool
     const countLabel = perNode ? `${count}/node` : String(count);
     return `${countLabel} × ${formFactor}`;
 };
+const inferPerNodePsu = (chassis: Chassis): boolean => {
+    if (chassis.constraints.psu.perNode !== undefined) return chassis.constraints.psu.perNode;
+    const hasMultipleNodes = chassis.constraints.nodes.length > 1;
+    const hasPerNodeBays = chassis.constraints.bays.length > 0 && chassis.constraints.bays.every((bay) => bay.perNode === true);
+    return hasMultipleNodes && hasPerNodeBays;
+};
 
 export function ChassisSelector() {
     const defaultChassis = useMemo(() => chassisData as Chassis[], []);
@@ -192,7 +198,7 @@ export function ChassisSelector() {
             nodeCount: chassis.constraints.nodes.length,
             psuWatts: chassis.constraints.psu.maxWatts,
             psuCount: chassis.constraints.psu.count,
-            psuPerNode: chassis.constraints.psu.perNode ?? false,
+            psuPerNode: inferPerNodePsu(chassis),
             ocp3SlotsPerNode: chassis.constraints.nodes[0]?.ocp3Slots ?? 0,
             maxDimmsPerNode: chassis.constraints.maxDimmsPerNode,
             bayGroups: chassis.constraints.bays.map(b => ({
@@ -519,6 +525,7 @@ export function ChassisSelector() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleChassis.map((c) => {
                     const isCustom = c.id.startsWith('custom_');
+                    const psuPerNode = inferPerNodePsu(c);
                     return (
                         <div
                             key={c.id}
@@ -565,7 +572,7 @@ export function ChassisSelector() {
                                     <div className="flex justify-between">
                                         <span className="text-slate-400">PSU:</span>
                                         <span className="font-medium">
-                                            {c.constraints.psu.maxWatts}W × {c.constraints.psu.count}{c.constraints.psu.perNode ? '/node' : ''}
+                                            {c.constraints.psu.maxWatts}W × {c.constraints.psu.count}{psuPerNode ? '/node' : ''}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">

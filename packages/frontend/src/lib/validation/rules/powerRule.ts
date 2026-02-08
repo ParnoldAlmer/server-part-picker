@@ -57,12 +57,24 @@ interface PsuCapacitySummary {
     nodeEffectiveCapacity: number;
 }
 
+function inferPerNodePsu(build: Build): boolean {
+    if (!build.chassis) return false;
+    const psu = build.chassis.constraints.psu;
+    if (psu.perNode !== undefined) return psu.perNode;
+
+    const constraints = build.chassis.constraints;
+    const hasMultipleNodes = constraints.nodes.length > 1;
+    const hasPerNodeBays = constraints.bays.length > 0 && constraints.bays.every((bay) => bay.perNode === true);
+
+    return hasMultipleNodes && hasPerNodeBays;
+}
+
 function calculatePsuCapacitySummary(build: Build): PsuCapacitySummary | null {
     if (!build.chassis) return null;
 
     const psu = build.chassis.constraints.psu;
     const mode = resolveRedundancyMode(psu);
-    const perNode = psu.perNode === true;
+    const perNode = inferPerNodePsu(build);
     const nodeCount = build.nodes?.length || build.chassis.constraints.nodes.length || 0;
     const domains = perNode ? Math.max(1, nodeCount) : 1;
     const installedCount = psu.count * domains;

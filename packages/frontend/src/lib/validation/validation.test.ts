@@ -610,6 +610,83 @@ describe('Power Rule', () => {
         const issues = powerRule(build);
         expect(issues.some((i) => i.code === 'POWER_NODE_EXCEEDED')).toBe(true);
     });
+
+    it('should infer per-node PSU for legacy multi-node chassis with per-node bays', () => {
+        const build = createTestBuild({
+            chassis: {
+                id: 'chassis-legacy',
+                sku: 'TEST-LEGACY',
+                vendor: 'Test',
+                name: 'Legacy Multi-Node Chassis',
+                formFactor: '2U',
+                constraints: {
+                    nodes: [
+                        { index: 0, moboFormFactors: ['EATX'], cpuCount: 1 },
+                        { index: 1, moboFormFactors: ['EATX'], cpuCount: 1 },
+                    ],
+                    bays: [{ formFactor: '2.5"', count: 6, interface: 'NVMe', hotSwap: true, perNode: true }],
+                    psu: { maxWatts: 800, count: 2, redundancy: true },
+                },
+            },
+            nodes: [
+                {
+                    index: 0,
+                    motherboard: null,
+                    cpus: [
+                        {
+                            id: 'cpu-a',
+                            sku: 'CPU-A',
+                            vendor: 'Test',
+                            name: 'CPU A',
+                            family: 'Test',
+                            platform: 'Intel',
+                            cores: 32,
+                            threads: 64,
+                            baseClock: 2.0,
+                            constraints: {
+                                socket: 'LGA4677',
+                                memGenSupported: [5],
+                                tdpW: 240,
+                                maxMemSpeedMT: 4800,
+                                lanes: 80,
+                            },
+                        },
+                    ],
+                    memory: [],
+                    storage: [],
+                },
+                {
+                    index: 1,
+                    motherboard: null,
+                    cpus: [
+                        {
+                            id: 'cpu-b',
+                            sku: 'CPU-B',
+                            vendor: 'Test',
+                            name: 'CPU B',
+                            family: 'Test',
+                            platform: 'Intel',
+                            cores: 32,
+                            threads: 64,
+                            baseClock: 2.0,
+                            constraints: {
+                                socket: 'LGA4677',
+                                memGenSupported: [5],
+                                tdpW: 240,
+                                maxMemSpeedMT: 4800,
+                                lanes: 80,
+                            },
+                        },
+                    ],
+                    memory: [],
+                    storage: [],
+                },
+            ],
+        });
+
+        const issues = powerRule(build);
+        expect(issues.some((i) => i.code === 'POWER_HEADROOM_LOW')).toBe(false);
+    });
 });
 
 describe('Compatibility Graph Rule', () => {
