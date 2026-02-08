@@ -1,5 +1,45 @@
 [
     {
+        "id": "nic-ocp3-marvell-41000",
+        "sku": "QL41232HQCU",
+        "vendor": "Marvell",
+        "name": "FastLinQ 41000 QL41232HQCU OCP 3.0 2x25GbE SFP28",
+        "constraints": {
+            "ports": [
+                {
+                    "connector": "SFP28",
+                    "speedGbps": 25,
+                    "count": 2
+                }
+            ],
+            "ocp3Compatible": true,
+            "requiresTransceiver": true
+        },
+        "msrp": 0,
+        "currency": "USD",
+        "lastUpdated": "2026-02-08"
+    },
+    {
+        "id": "nic-ocp3-mellanox-cx4621a",
+        "sku": "MCX4621A-ACAB",
+        "vendor": "NVIDIA",
+        "name": "ConnectX-4 Lx EN OCP 3.0 2x25GbE SFP28",
+        "constraints": {
+            "ports": [
+                {
+                    "connector": "SFP28",
+                    "speedGbps": 25,
+                    "count": 2
+                }
+            ],
+            "ocp3Compatible": true,
+            "requiresTransceiver": true
+        },
+        "msrp": 0,
+        "currency": "USD",
+        "lastUpdated": "2026-02-08"
+    },
+    {
         "id": "nic-ocp3-mcx623106",
         "sku": "MCX623106AC-CDAT",
         "vendor": "NVIDIA",

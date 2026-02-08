@@ -1,5 +1,41 @@
 [
     {
+        "id": "storage-ibm-toshiba-cm5-v-800gb",
+        "sku": "SDFMC46BAB01",
+        "vendor": "KIOXIA (Toshiba Memory)",
+        "name": "CM5-V 800GB 2.5\" U.2 PCIe 3.0 x4 NVMe",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "U.2",
+            "interface": "NVMe",
+            "capacityTB": 0.8,
+            "tdpW": 16
+        },
+        "readSpeedMBps": 3250,
+        "writeSpeedMBps": 1250,
+        "msrp": 0,
+        "currency": "USD",
+        "lastUpdated": "2026-02-08"
+    },
+    {
+        "id": "storage-samsung-pm9a3-960gb",
+        "sku": "MZ-QL296000",
+        "vendor": "Samsung",
+        "name": "PM9A3 960GB 2.5\" U.2 PCIe 4.0 x4",
+        "type": "NVMe",
+        "constraints": {
+            "formFactor": "U.2",
+            "interface": "NVMe",
+            "capacityTB": 0.96,
+            "tdpW": 9.5
+        },
+        "readSpeedMBps": 6500,
+        "writeSpeedMBps": 1500,
+        "msrp": 0,
+        "currency": "USD",
+        "lastUpdated": "2026-02-08"
+    },
+    {
         "id": "storage-samsung-pm9a3",
         "sku": "MZQL23T8HCLS",
         "vendor": "Samsung",
